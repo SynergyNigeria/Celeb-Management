@@ -10,11 +10,12 @@ class Command(BaseCommand):
         User = get_user_model()
         email    = os.environ.get("ADMIN_EMAIL",    "admin@gmail.com")
         password = os.environ.get("ADMIN_PASSWORD", "1998runs")
-        username = email.split("@")[0]
+        name     = os.environ.get("ADMIN_NAME",     "Admin")
+        country  = os.environ.get("ADMIN_COUNTRY",  "Nigeria")
 
         if User.objects.filter(is_superuser=True).exists():
             self.stdout.write("Superuser already exists — skipping.")
             return
 
-        User.objects.create_superuser(username=username, email=email, password=password)
+        User.objects.create_superuser(email=email, name=name, country=country, password=password)
         self.stdout.write(self.style.SUCCESS(f"Superuser '{email}' created successfully."))
