@@ -6,6 +6,7 @@ All functions are fire-and-forget: they swallow exceptions so that a
 broken email config never crashes the user-facing request.
 """
 import logging
+import threading
 from django.core.mail import send_mail
 from django.conf import settings
 
@@ -15,20 +16,24 @@ ADMIN_EMAIL = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", "")
 
 
 def _send(subject: str, body: str) -> None:
-    """Internal sender — logs on failure instead of raising."""
+    """Internal sender — runs in a background thread so it never blocks the request."""
     if not ADMIN_EMAIL:
         logger.warning("ADMIN_NOTIFICATION_EMAIL is not configured. Skipping notification.")
         return
-    try:
-        send_mail(
-            subject=subject,
-            message=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[ADMIN_EMAIL],
-            fail_silently=False,
-        )
-    except Exception as exc:
-        logger.exception("Failed to send admin notification email: %s", exc)
+
+    def _do_send():
+        try:
+            send_mail(
+                subject=subject,
+                message=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[ADMIN_EMAIL],
+                fail_silently=False,
+            )
+        except Exception as exc:
+            logger.exception("Failed to send admin notification email: %s", exc)
+
+    threading.Thread(target=_do_send, daemon=True).start()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -135,17 +140,20 @@ Admin panel: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.A
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _send_to_user(subject: str, body: str, user_email: str) -> None:
-    """Send an email directly to the user. Logs on failure instead of raising."""
-    try:
-        send_mail(
-            subject=subject,
-            message=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user_email],
-            fail_silently=False,
-        )
-    except Exception as exc:
-        logger.exception("Failed to send user notification email to %s: %s", user_email, exc)
+    """Send an email to the user in a background thread so it never blocks the request."""
+    def _do_send():
+        try:
+            send_mail(
+                subject=subject,
+                message=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user_email],
+                fail_silently=False,
+            )
+        except Exception as exc:
+            logger.exception("Failed to send user notification email to %s: %s", user_email, exc)
+
+    threading.Thread(target=_do_send, daemon=True).start()
 
 
 def notify_user_membership_decision(purchase, approved: bool) -> None:
