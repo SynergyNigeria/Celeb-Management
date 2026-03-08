@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ celeb.name }} &mdash; Memberships &mdash; celebrity-manage{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-14">
+  <nav class="text-[12px] text-zinc-600 mb-10 flex items-center gap-2">
+    <a href="{% url 'home' %}" class="hover:text-[#C9A84C] transition-colors">Home</a>
+    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+    <a href="{% url 'celeb_detail' celeb.slug %}" class="hover:text-[#C9A84C] transition-colors">{{ celeb.name }}</a>
+    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i><span class="text-zinc-400">Membership</span>
+  </nav>
+  <div class="text-center mb-14">
+    <div class="w-20 h-20 mx-auto rounded-xl overflow-hidden border border-[#C9A84C]/30 mb-5 bg-[#111]">
+      {% if celeb.photo %}<img src="{{ celeb.photo.url }}" class="w-full h-full object-cover" />
+      {% else %}<div class="w-full h-full flex items-center justify-center"><i data-lucide="user" class="w-8 h-8 text-zinc-600"></i></div>{% endif %}
+    </div>
+    <p class="text-[#C9A84C] text-[11px] font-bold uppercase tracking-[.2em] mb-2">{{ celeb.name }}</p>
+    <h1 class="text-4xl font-black tracking-tight mb-2">Choose Your <span class="text-[#C9A84C]">Membership</span></h1>
+    <p class="text-zinc-500 text-sm">Select a plan that matches your level of fandom</p>
+  </div>
+  {% if tiers %}
+  <div class="grid md:grid-cols-3 gap-6">
+    {% for tier in tiers %}
+    <div class="relative card p-7 flex flex-col gap-5 {% if forloop.counter == 2 %}border-[#C9A84C]/50{% endif %}">
+      {% if forloop.counter == 2 %}
+      <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-black text-[10px] font-black px-4 py-1 rounded-full whitespace-nowrap tracking-[.1em] uppercase">MOST POPULAR</div>
+      {% endif %}
+      <div>
+        <span class="text-[11px] font-bold px-3 py-1.5 rounded border inline-block mb-4 tracking-[.08em]
+          {% if tier.badge_color == 'gold' %}bg-[#C9A84C]/10 text-[#C9A84C] border-[#C9A84C]/25
+          {% elif tier.badge_color == 'blue' %}bg-blue-900/20 text-blue-300 border-blue-700/30
+          {% elif tier.badge_color == 'platinum' %}bg-zinc-700/30 text-zinc-200 border-zinc-600/30
+          {% else %}bg-zinc-800/40 text-zinc-400 border-zinc-700/30{% endif %}">{{ tier.name }}</span>
+        <p class="text-5xl font-black text-[#C9A84C]">${{ tier.price }}</p>
+        <p class="text-[11px] text-zinc-600 mt-1.5 tracking-[.05em]">{{ tier.duration_days }}-day membership</p>
+      </div>
+      <p class="text-zinc-400 text-sm flex-1">{{ tier.description }}</p>
+      <ul class="space-y-2">
+        {% for benefit in tier.benefits_list %}
+        <li class="flex gap-2.5 text-[13px] text-zinc-300">
+          <i data-lucide="check" class="w-3.5 h-3.5 text-[#C9A84C] flex-shrink-0 mt-0.5"></i>{{ benefit }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% if tier.pk in user_tier_ids %}
+        <div class="w-full btn-ghost py-3 text-sm text-green-400 border-green-900/40 text-center cursor-not-allowed select-none inline-flex items-center justify-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4"></i> Active Plan</div>
+      {% elif user.is_authenticated %}
+        <a href="{% url 'membership_purchase' tier.pk %}" class="block text-center btn-gold py-3 text-sm">Join Now</a>
+      {% else %}
+        <a href="{% url 'login' %}?next={% url 'membership_list' celeb.slug %}" class="block text-center btn-outline py-3 text-sm">Sign In to Join</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-20 text-zinc-600">
+    <i data-lucide="ticket" class="w-10 h-10 opacity-40 mx-auto mb-4"></i>
+    <p class="text-base font-semibold">No membership tiers yet for {{ celeb.name }}.</p>
+    <a href="{% url 'celeb_detail' celeb.slug %}" class="text-[#C9A84C] mt-4 inline-flex items-center gap-1 hover:underline text-sm"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to profile</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// === GSAP: membership list animations ===
+// 1. Header (photo + title + subtitle)
+(function() {
+  const center = document.querySelector(".text-center.mb-14");
+  if (!center) return;
+  const photo = center.querySelector(".w-20.h-20");
+  const label = center.querySelector("p.text-\\[\\#C9A84C\\]");
+  const h1    = center.querySelector("h1");
+  const sub   = center.querySelector("p.text-zinc-500");
+  const tl = gsap.timeline({ delay: 0.15 });
+  if (photo) tl.from(photo, { opacity: 0, scale: 0.78, duration: 0.6, ease: "back.out(1.5)" }, 0);
+  if (label) tl.from(label, { opacity: 0, y: 15, duration: 0.5, ease: "power3.out" }, 0.18);
+  if (h1)    tl.from(h1,    { opacity: 0, y: 20, duration: 0.6, ease: "power3.out" }, 0.26);
+  if (sub)   tl.from(sub,   { opacity: 0, y: 12, duration: 0.45, ease: "power3.out" }, 0.36);
+})();
+
+// 2. Tier cards stagger
+const cards = document.querySelectorAll(".grid.md\\:grid-cols-3 > .card, .grid.md\\:grid-cols-3 > .relative");
+if (cards.length) {
+  gsap.from(cards, {
+    opacity: 0, y: 40, duration: 0.6, ease: "power3.out", stagger: 0.13,
+    scrollTrigger: { trigger: cards[0], start: "top 85%" }
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends "panel/base.html" %}
+{% block title %}Payments — celebrity-manage{% endblock %}
+{% block nav_payments %}active{% endblock %}
+{% block page_title %}Payments{% endblock %}
+{% block page_subtitle %}Review and approve pending payment requests{% endblock %}
+
+{% block content %}
+
+{# ── Summary ───────────────────────────────────────────────────────────────── #}
+<div class="flex items-center gap-6 mb-8">
+  <div>
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Pending Memberships</p>
+    <p class="text-2xl font-black text-white">{{ pending_memberships|length }}</p>
+  </div>
+  <div class="w-px h-8 bg-[#1e1e1e]"></div>
+  <div>
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Pending Donations</p>
+    <p class="text-2xl font-black text-white">{{ pending_donations|length }}</p>
+  </div>
+  <div class="w-px h-8 bg-[#1e1e1e]"></div>
+  <div>
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Pending Events</p>
+    <p class="text-2xl font-black text-white">{{ pending_events|length }}</p>
+  </div>
+</div>
+
+{# ── Pending Memberships ──────────────────────────────────────────────────── #}
+<h2 class="text-[11px] font-bold uppercase tracking-widest text-[#555] mb-3 flex items-center gap-2">
+  <i data-lucide="ticket" class="w-3.5 h-3.5 text-[#C9A84C]"></i> Pending Membership Payments
+</h2>
+<div class="card overflow-hidden mb-8">
+  {% if pending_memberships %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Celebrity</th>
+        <th>Plan</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Gift Card</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in pending_memberships %}
+      <tr>
+        <td class="font-semibold text-zinc-200">{{ m.user.name|default:m.user.email }}</td>
+        <td class="text-zinc-400">{{ m.tier.celebrity.name }}</td>
+        <td>
+          <span class="px-2 py-0.5 rounded text-[11px] font-bold
+            {% if m.tier.badge_color == 'gold' %}bg-[#C9A84C]/15 text-[#C9A84C]
+            {% elif m.tier.badge_color == 'blue' %}bg-blue-500/15 text-blue-300
+            {% else %}bg-zinc-700/40 text-zinc-300{% endif %}">
+            {{ m.tier.name }}
+          </span>
+        </td>
+        <td class="text-[#C9A84C] font-black">${{ m.tier.price }}</td>
+        <td>
+          {% if m.payment_method == 'gift_card' %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 text-[11px] font-bold">
+            <i data-lucide="gift" class="w-3 h-3"></i> Gift Card
+          </span>
+          {% else %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 text-[11px] font-bold">
+            <i data-lucide="building-2" class="w-3 h-3"></i> Bank Transfer
+          </span>
+          {% endif %}
+        </td>
+        <td>
+          {% if m.gift_card_image %}
+          <a href="{{ m.gift_card_image.url }}" target="_blank" class="block w-12 h-12 rounded overflow-hidden border border-[#2a2a2a] hover:border-[#C9A84C]/50 transition-colors">
+            <img src="{{ m.gift_card_image.url }}" class="w-full h-full object-cover">
+          </a>
+          {% else %}<span class="text-zinc-700 text-xs">—</span>{% endif %}
+        </td>
+        <td class="text-zinc-500 text-[12px]">{{ m.purchased_at|date:"M j, Y" }}</td>
+        <td>
+          <div class="flex gap-2">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="model_type" value="membership">
+              <input type="hidden" name="pk" value="{{ m.pk }}">
+              <input type="hidden" name="action" value="approve">
+              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-green-500/15 text-green-400 text-[11px] font-bold hover:bg-green-500/25 transition-colors">
+                <i data-lucide="check" class="w-3 h-3"></i> Approve
+              </button>
+            </form>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="model_type" value="membership">
+              <input type="hidden" name="pk" value="{{ m.pk }}">
+              <input type="hidden" name="action" value="reject">
+              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-red-500/15 text-red-400 text-[11px] font-bold hover:bg-red-500/25 transition-colors">
+                <i data-lucide="x" class="w-3 h-3"></i> Reject
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="p-8 text-center text-zinc-600 text-sm">No pending membership payments.</div>
+  {% endif %}
+</div>
+
+{# ── Pending Donations ────────────────────────────────────────────────────── #}
+<h2 class="text-[11px] font-bold uppercase tracking-widest text-[#555] mb-3 flex items-center gap-2">
+  <i data-lucide="heart" class="w-3.5 h-3.5 text-[#C9A84C]"></i> Pending Donations
+</h2>
+<div class="card overflow-hidden mb-8">
+  {% if pending_donations %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Foundation</th>
+        <th>Celebrity</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Gift Card</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in pending_donations %}
+      <tr>
+        <td class="font-semibold text-zinc-200">{% if d.is_anonymous %}Anonymous{% else %}{{ d.user.name|default:d.user.email }}{% endif %}</td>
+        <td class="text-zinc-400">{{ d.foundation.name }}</td>
+        <td class="text-zinc-400">{{ d.foundation.celebrity.name }}</td>
+        <td class="text-[#C9A84C] font-black">${{ d.amount }}</td>
+        <td>
+          {% if d.payment_method == 'gift_card' %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 text-[11px] font-bold">
+            <i data-lucide="gift" class="w-3 h-3"></i> Gift Card
+          </span>
+          {% else %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 text-[11px] font-bold">
+            <i data-lucide="building-2" class="w-3 h-3"></i> Bank Transfer
+          </span>
+          {% endif %}
+        </td>
+        <td>
+          {% if d.gift_card_image %}
+          <a href="{{ d.gift_card_image.url }}" target="_blank" class="block w-12 h-12 rounded overflow-hidden border border-[#2a2a2a] hover:border-[#C9A84C]/50 transition-colors">
+            <img src="{{ d.gift_card_image.url }}" class="w-full h-full object-cover">
+          </a>
+          {% else %}<span class="text-zinc-700 text-xs">—</span>{% endif %}
+        </td>
+        <td class="text-zinc-500 text-[12px]">{{ d.donated_at|date:"M j, Y" }}</td>
+        <td>
+          <div class="flex gap-2">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="model_type" value="donation">
+              <input type="hidden" name="pk" value="{{ d.pk }}">
+              <input type="hidden" name="action" value="approve">
+              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-green-500/15 text-green-400 text-[11px] font-bold hover:bg-green-500/25 transition-colors">
+                <i data-lucide="check" class="w-3 h-3"></i> Approve
+              </button>
+            </form>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="model_type" value="donation">
+              <input type="hidden" name="pk" value="{{ d.pk }}">
+              <input type="hidden" name="action" value="reject">
+              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-red-500/15 text-red-400 text-[11px] font-bold hover:bg-red-500/25 transition-colors">
+                <i data-lucide="x" class="w-3 h-3"></i> Reject
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="p-8 text-center text-zinc-600 text-sm">No pending donations.</div>
+  {% endif %}
+</div>
+
+{# ── Pending Event Registrations ──────────────────────────────────────────── #}
+<h2 class="text-[11px] font-bold uppercase tracking-widest text-[#555] mb-3 flex items-center gap-2">
+  <i data-lucide="mic" class="w-3.5 h-3.5 text-[#C9A84C]"></i> Pending Event Registrations
+</h2>
+<div class="card overflow-hidden">
+  {% if pending_events %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Event</th>
+        <th>Celebrity</th>
+        <th>Fee</th>
+        <th>Method</th>
+        <th>Gift Card</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in pending_events %}
+      <tr>
+        <td class="font-semibold text-zinc-200">{{ r.user.name|default:r.user.email }}</td>
+        <td class="text-zinc-300 max-w-[160px] truncate" title="{{ r.event.title }}">{{ r.event.title }}</td>
+        <td class="text-zinc-400">{{ r.event.celebrity.name }}</td>
+        <td class="text-[#C9A84C] font-black">${{ r.event.ticket_price }}</td>
+        <td>
+          {% if r.payment_method == 'gift_card' %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 text-[11px] font-bold">
+            <i data-lucide="gift" class="w-3 h-3"></i> Gift Card
+          </span>
+          {% elif r.payment_method == 'free' %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/15 text-green-300 text-[11px] font-bold">
+            <i data-lucide="check-circle" class="w-3 h-3"></i> Free
+          </span>
+          {% else %}
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 text-[11px] font-bold">
+            <i data-lucide="building-2" class="w-3 h-3"></i> Bank Transfer
+          </span>
+          {% endif %}
+        </td>
+        <td>
+          {% if r.gift_card_image %}
+          <a href="{{ r.gift_card_image.url }}" target="_blank" class="block w-12 h-12 rounded overflow-hidden border border-[#2a2a2a] hover:border-[#C9A84C]/50 transition-colors">
+            <img src="{{ r.gift_card_image.url }}" class="w-full h-full object-cover">
+          </a>
+          {% else %}<span class="text-zinc-700 text-xs">—</span>{% endif %}
+        </td>
+        <td class="text-zinc-500 text-[12px]">{{ r.registered_at|date:"M j, Y" }}</td>
+        <td>
+          <div class="flex gap-2">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="model_type" value="event">
+              <input type="hidden" name="pk" value="{{ r.pk }}">
+              <input type="hidden" name="action" value="approve">
+              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-green-500/15 text-green-400 text-[11px] font-bold hover:bg-green-500/25 transition-colors">
+                <i data-lucide="check" class="w-3 h-3"></i> Approve
+              </button>
+            </form>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="model_type" value="event">
+              <input type="hidden" name="pk" value="{{ r.pk }}">
+              <input type="hidden" name="action" value="reject">
+              <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-red-500/15 text-red-400 text-[11px] font-bold hover:bg-red-500/25 transition-colors">
+                <i data-lucide="x" class="w-3 h-3"></i> Reject
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="p-8 text-center text-zinc-600 text-sm">No pending event registrations.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

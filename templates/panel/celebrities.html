@@ -1,0 +1,72 @@
+{% extends "panel/base.html" %}
+{% block title %}Celebrities — celebrity-manage{% endblock %}
+{% block nav_celebrities %}active{% endblock %}
+{% block page_title %}Celebrities{% endblock %}
+{% block page_subtitle %}Manage all celebrity profiles{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'panel_celebrity_add' %}" class="btn-gold">+ Add Celebrity</a>
+{% endblock %}
+
+{% block content %}
+<div class="card overflow-hidden">
+  {% if celebs %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Celebrity</th>
+        <th>Category</th>
+        <th>Events</th>
+        <th>Members</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for celeb in celebs %}
+      <tr>
+        <td>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg overflow-hidden bg-[#1a1a1a] shrink-0">
+              {% if celeb.photo %}<img src="{{ celeb.photo.url }}" class="w-full h-full object-cover" />
+              {% else %}<div class="w-full h-full flex items-center justify-center text-[14px]">★</div>{% endif %}
+            </div>
+            <div>
+              <p class="font-bold text-white text-[13px]">{{ celeb.name }}</p>
+              <p class="text-[11px] text-[#555]">{{ celeb.tagline|truncatechars:40 }}</p>
+            </div>
+          </div>
+        </td>
+        <td><span class="badge badge-gray">{{ celeb.get_category_display }}</span></td>
+        <td class="font-semibold">{{ celeb.event_count }}</td>
+        <td class="font-semibold">{{ celeb.member_count }}</td>
+        <td>
+          {% if celeb.is_active %}
+            <span class="badge badge-green">Active</span>
+          {% else %}
+            <span class="badge badge-red">Inactive</span>
+          {% endif %}
+          {% if celeb.is_featured %}
+            <span class="badge badge-gold ml-1">Featured</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="flex items-center gap-2 justify-end">
+            <a href="{% url 'celeb_detail' celeb.slug %}" target="_blank" class="btn-ghost py-1 px-3">View</a>
+            <a href="{% url 'panel_celebrity_edit' celeb.pk %}" class="btn-gold py-1 px-3">Edit</a>
+            <a href="{% url 'panel_celebrity_delete' celeb.pk %}" class="btn-danger py-1 px-3">Del</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="py-20 text-center">
+    <p class="text-4xl mb-3">★</p>
+    <p class="text-[13px] text-[#555] mb-4">No celebrities yet.</p>
+    <a href="{% url 'panel_celebrity_add' %}" class="btn-gold">+ Add First Celebrity</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

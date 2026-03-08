@@ -1,0 +1,66 @@
+{% extends "panel/base.html" %}
+{% block title %}Membership Tiers — celebrity-manage{% endblock %}
+{% block nav_tiers %}active{% endblock %}
+{% block page_title %}Membership Tiers{% endblock %}
+{% block page_subtitle %}Manage all fan membership plans{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'panel_tier_add' %}" class="btn-gold">+ Add Tier</a>
+{% endblock %}
+
+{% block content %}
+<div class="card overflow-hidden">
+  {% if tiers %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Tier</th>
+        <th>Celebrity</th>
+        <th>Price</th>
+        <th>Duration</th>
+        <th>Purchases</th>
+        <th>Badge</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tier in tiers %}
+      <tr>
+        <td>
+          <p class="font-bold text-white text-[13px]">{{ tier.name }}</p>
+          <p class="text-[11px] text-[#555]">{{ tier.description|truncatechars:45 }}</p>
+        </td>
+        <td class="text-[12px]">{{ tier.celebrity.name }}</td>
+        <td class="font-black text-[#C9A84C]">${{ tier.price }}</td>
+        <td class="text-[12px] text-[#888]">{{ tier.duration_days }}d</td>
+        <td class="font-semibold">{{ tier.purchase_count }}</td>
+        <td>
+          {% if tier.badge_color == 'gold' %}<span class="badge badge-gold">Gold</span>
+          {% elif tier.badge_color == 'blue' %}<span class="badge badge-blue">Blue</span>
+          {% elif tier.badge_color == 'platinum' %}<span class="badge" style="background:rgba(200,200,200,.1);color:#ccc;border-color:rgba(200,200,200,.2)">Platinum</span>
+          {% else %}<span class="badge badge-gray">Gray</span>{% endif %}
+        </td>
+        <td>
+          {% if tier.is_active %}<span class="badge badge-green">Active</span>
+          {% else %}<span class="badge badge-red">Inactive</span>{% endif %}
+        </td>
+        <td>
+          <div class="flex items-center gap-2 justify-end">
+            <a href="{% url 'panel_tier_edit' tier.pk %}" class="btn-gold py-1 px-3">Edit</a>
+            <a href="{% url 'panel_tier_delete' tier.pk %}" class="btn-danger py-1 px-3">Del</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="py-20 text-center">
+    <p class="text-4xl mb-3">🎟</p>
+    <p class="text-[13px] text-[#555] mb-4">No membership tiers yet.</p>
+    <a href="{% url 'panel_tier_add' %}" class="btn-gold">+ Add First Tier</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

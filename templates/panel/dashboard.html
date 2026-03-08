@@ -1,0 +1,131 @@
+{% extends "panel/base.html" %}
+{% block title %}Dashboard — celebrity-manage{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ user.name }}{% endblock %}
+
+{% block content %}
+<!-- STAT GRID -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  {% with items=stats %}
+  <div class="stat-card">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Celebrities</p>
+    <p class="text-3xl font-black text-white">{{ stats.celebrities }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Fans</p>
+    <p class="text-3xl font-black text-white">{{ stats.fans }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Events</p>
+    <p class="text-3xl font-black text-white">{{ stats.events }}</p>
+    <p class="text-[11px] text-[#C9A84C] mt-0.5">{{ stats.upcoming_events }} upcoming</p>
+  </div>
+  <div class="stat-card">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Foundations</p>
+    <p class="text-3xl font-black text-white">{{ stats.foundations }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Mem. Tiers</p>
+    <p class="text-3xl font-black text-white">{{ stats.tiers }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Memberships Sold</p>
+    <p class="text-3xl font-black text-white">{{ stats.memberships }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Donations</p>
+    <p class="text-3xl font-black text-white">{{ stats.donations }}</p>
+  </div>
+  <div class="stat-card border-[#C9A84C]/20">
+    <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-1">Total Raised</p>
+    <p class="text-3xl font-black text-[#C9A84C]">${{ stats.total_donated|floatformat:0 }}</p>
+  </div>
+  {% endwith %}
+</div>
+
+<!-- BOTTOM PANELS -->
+<div class="grid md:grid-cols-3 gap-6">
+
+  <!-- Upcoming Events -->
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-[13px] font-black">Upcoming Events</p>
+      <a href="{% url 'panel_events' %}" class="text-[11px] text-[#C9A84C] hover:underline">View all</a>
+    </div>
+    {% if upcoming_events %}
+    <div class="space-y-3">
+      {% for ev in upcoming_events %}
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <p class="text-[12px] font-bold text-white truncate">{{ ev.title }}</p>
+          <p class="text-[11px] text-[#555]">{{ ev.celebrity.name }} · {{ ev.event_date|date:"M j" }}</p>
+        </div>
+        <a href="{% url 'panel_event_edit' ev.pk %}" class="text-[11px] text-[#555] hover:text-[#C9A84C] shrink-0">Edit</a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-[12px] text-[#555]">No upcoming events.</p>
+    {% endif %}
+  </div>
+
+  <!-- Recent Fans -->
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-[13px] font-black">Recent Fans</p>
+      <a href="{% url 'panel_fans' %}" class="text-[11px] text-[#C9A84C] hover:underline">View all</a>
+    </div>
+    {% if recent_fans %}
+    <div class="space-y-3">
+      {% for fan in recent_fans %}
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center text-[11px] font-black text-[#C9A84C] shrink-0">{{ fan.name|first|upper }}</div>
+        <div class="min-w-0">
+          <p class="text-[12px] font-semibold text-white truncate">{{ fan.name }}</p>
+          <p class="text-[11px] text-[#555]">{{ fan.date_joined|date:"M j, Y" }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-[12px] text-[#555]">No fans yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Recent Donations -->
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-[13px] font-black">Recent Donations</p>
+      <a href="{% url 'panel_donations' %}" class="text-[11px] text-[#C9A84C] hover:underline">View all</a>
+    </div>
+    {% if recent_donations %}
+    <div class="space-y-3">
+      {% for d in recent_donations %}
+      <div class="flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <p class="text-[12px] font-semibold text-white truncate">{% if d.is_anonymous %}Anonymous{% else %}{{ d.user.name }}{% endif %}</p>
+          <p class="text-[11px] text-[#555] truncate">{{ d.foundation.name }}</p>
+        </div>
+        <p class="text-[12px] font-black text-[#C9A84C] shrink-0">${{ d.amount }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-[12px] text-[#555]">No donations yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="mt-6">
+  <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-3">Quick Actions</p>
+  <div class="flex flex-wrap gap-3">
+    <a href="{% url 'panel_celebrity_add' %}" class="btn-gold">+ Add Celebrity</a>
+    <a href="{% url 'panel_event_add' %}" class="btn-ghost">+ Add Event</a>
+    <a href="{% url 'panel_foundation_add' %}" class="btn-ghost">+ Add Foundation</a>
+    <a href="{% url 'panel_tier_add' %}" class="btn-ghost">+ Add Tier</a>
+  </div>
+</div>
+{% endblock %}

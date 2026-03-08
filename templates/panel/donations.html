@@ -1,0 +1,65 @@
+{% extends "panel/base.html" %}
+{% block title %}Donations — celebrity-manage{% endblock %}
+{% block nav_donations %}active{% endblock %}
+{% block page_title %}Donations{% endblock %}
+{% block page_subtitle %}All fan contributions{% endblock %}
+
+{% block content %}
+<!-- Summary bar -->
+<div class="flex items-center justify-between mb-6">
+  <div class="flex items-center gap-6">
+    <div>
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Total Donations</p>
+      <p class="text-2xl font-black text-white">{{ donations|length }}</p>
+    </div>
+    <div class="w-px h-8 bg-[#1e1e1e]"></div>
+    <div>
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Total Amount</p>
+      <p class="text-2xl font-black text-[#C9A84C]">${{ total|floatformat:2 }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="card overflow-hidden">
+  {% if donations %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Donor</th>
+        <th>Foundation</th>
+        <th>Celebrity</th>
+        <th>Amount</th>
+        <th>Message</th>
+        <th>Date</th>
+        <th>Ref</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in donations %}
+      <tr>
+        <td>
+          <p class="font-semibold text-[13px] text-white">
+            {% if d.is_anonymous %}<span class="text-[#555]">Anonymous</span>
+            {% elif d.user %}{{ d.user.name }}
+            {% else %}<span class="text-[#555]">Deleted User</span>{% endif %}
+          </p>
+          {% if not d.is_anonymous and d.user %}<p class="text-[11px] text-[#555]">{{ d.user.email }}</p>{% endif %}
+        </td>
+        <td class="text-[12px]">{{ d.foundation.name }}</td>
+        <td class="text-[12px] text-[#888]">{{ d.foundation.celebrity.name }}</td>
+        <td class="font-black text-[#C9A84C]">${{ d.amount }}</td>
+        <td class="text-[12px] text-[#888] max-w-[140px]">{{ d.message|default:"—"|truncatechars:40 }}</td>
+        <td class="text-[12px] text-[#888]">{{ d.donated_at|date:"M j, Y" }}</td>
+        <td class="text-[11px] text-[#555] font-mono">{{ d.transaction_ref }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="py-20 text-center">
+    <p class="text-4xl mb-3">💰</p>
+    <p class="text-[13px] text-[#555]">No donations yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

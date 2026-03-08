@@ -1,0 +1,67 @@
+{% extends "panel/base.html" %}
+{% block title %}Foundations — celebrity-manage{% endblock %}
+{% block nav_foundations %}active{% endblock %}
+{% block page_title %}Foundations{% endblock %}
+{% block page_subtitle %}Manage charity foundations{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'panel_foundation_add' %}" class="btn-gold">+ Add Foundation</a>
+{% endblock %}
+
+{% block content %}
+<div class="card overflow-hidden">
+  {% if foundations %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Foundation</th>
+        <th>Celebrity</th>
+        <th>Cause</th>
+        <th>Target</th>
+        <th>Raised</th>
+        <th>Progress</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in foundations %}
+      <tr>
+        <td>
+          <p class="font-bold text-white text-[13px]">{{ f.name }}</p>
+        </td>
+        <td class="text-[12px]">{{ f.celebrity.name }}</td>
+        <td class="text-[12px] text-[#888]">{{ f.cause_type|default:"—" }}</td>
+        <td class="text-[12px] font-semibold">${{ f.target_amount|floatformat:0 }}</td>
+        <td class="text-[12px] font-bold text-[#C9A84C]">${{ f.amount_raised|floatformat:0 }}</td>
+        <td>
+          <div class="flex items-center gap-2">
+            <div class="w-20 h-1.5 bg-[#1e1e1e] rounded-full overflow-hidden">
+              <div class="h-full bg-[#C9A84C] rounded-full" style="width:{{ f.progress_pct }}%"></div>
+            </div>
+            <span class="text-[11px] text-[#555]">{{ f.progress_pct }}%</span>
+          </div>
+        </td>
+        <td>
+          {% if f.is_active %}<span class="badge badge-green">Active</span>
+          {% else %}<span class="badge badge-red">Inactive</span>{% endif %}
+        </td>
+        <td>
+          <div class="flex items-center gap-2 justify-end">
+            <a href="{% url 'panel_foundation_edit' f.pk %}" class="btn-gold py-1 px-3">Edit</a>
+            <a href="{% url 'panel_foundation_delete' f.pk %}" class="btn-danger py-1 px-3">Del</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="py-20 text-center">
+    <p class="text-4xl mb-3">❤️</p>
+    <p class="text-[13px] text-[#555] mb-4">No foundations yet.</p>
+    <a href="{% url 'panel_foundation_add' %}" class="btn-gold">+ Add Foundation</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

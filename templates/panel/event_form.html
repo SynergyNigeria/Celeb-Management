@@ -1,0 +1,120 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ action }} — celebrity-manage{% endblock %}
+{% block nav_events %}active{% endblock %}
+{% block page_title %}{{ action }}{% endblock %}
+{% block page_subtitle %}Event details{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'panel_events' %}" class="btn-ghost">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Event Info</p>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Celebrity *</label>
+        {{ form.celebrity }}
+        {% if form.celebrity.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.celebrity.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Title *</label>
+        {{ form.title }}
+        {% if form.title.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.title.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Slug</label>
+        {{ form.slug }}
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Description *</label>
+        {{ form.description }}
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Event Type</label>
+          {{ form.event_type }}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Status</label>
+          {{ form.status }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Date & Location</p>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Start Date & Time *</label>
+          {{ form.event_date }}
+          {% if form.event_date.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.event_date.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">End Date & Time</label>
+          {{ form.end_date }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Full Location</label>
+        {{ form.location }}
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Venue</label>
+          {{ form.venue }}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">City</label>
+          {{ form.city }}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Country</label>
+          {{ form.country }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Tickets & Capacity</p>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Ticket Price ($)</label>
+          {{ form.ticket_price }}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Total Seats (0 = unlimited)</label>
+          {{ form.seats_total }}
+        </div>
+      </div>
+
+      <label class="flex items-center gap-2 cursor-pointer text-[13px] font-semibold text-zinc-300">
+        {{ form.is_free }} Free Event
+      </label>
+    </div>
+
+    <div class="card p-6">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-3">Event Image</p>
+      {% if obj.image %}<img src="{{ obj.image.url }}" class="h-24 rounded-lg object-cover mb-3 border border-[#2a2a2a]" />{% endif %}
+      {{ form.image }}
+    </div>
+
+    <div class="flex items-center gap-3 pt-1">
+      <button type="submit" class="btn-gold px-8">Save Event</button>
+      <a href="{% url 'panel_events' %}" class="btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

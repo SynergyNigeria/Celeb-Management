@@ -1,0 +1,62 @@
+{% extends "panel/base.html" %}
+{% block title %}Fans — celebrity-manage{% endblock %}
+{% block nav_fans %}active{% endblock %}
+{% block page_title %}Fans{% endblock %}
+{% block page_subtitle %}Registered fan accounts{% endblock %}
+
+{% block content %}
+<div class="card overflow-hidden">
+  {% if fans %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Fan</th>
+        <th>Country</th>
+        <th>Memberships</th>
+        <th>Donations</th>
+        <th>Joined</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fan in fans %}
+      <tr>
+        <td>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-[#1e1e1e] flex items-center justify-center text-[12px] font-black text-[#C9A84C] shrink-0">
+              {% if fan.avatar %}<img src="{{ fan.avatar.url }}" class="w-full h-full object-cover rounded-full" />
+              {% else %}{{ fan.name|first|upper }}{% endif %}
+            </div>
+            <div>
+              <p class="font-bold text-white text-[13px]">{{ fan.name }}</p>
+              <p class="text-[11px] text-[#555]">{{ fan.email }}</p>
+            </div>
+          </div>
+        </td>
+        <td class="text-[12px] text-[#888]">{{ fan.country|default:"—" }}</td>
+        <td>
+          {% if fan.membership_count %}
+            <span class="badge badge-gold">{{ fan.membership_count }}</span>
+          {% else %}
+            <span class="text-[#555] text-[12px]">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if fan.donation_count %}
+            <span class="badge badge-green">{{ fan.donation_count }}</span>
+          {% else %}
+            <span class="text-[#555] text-[12px]">—</span>
+          {% endif %}
+        </td>
+        <td class="text-[12px] text-[#888]">{{ fan.date_joined|date:"M j, Y" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="py-20 text-center">
+    <p class="text-4xl mb-3">👥</p>
+    <p class="text-[13px] text-[#555]">No fans registered yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

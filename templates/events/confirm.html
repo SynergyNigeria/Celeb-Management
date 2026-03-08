@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Confirm Registration &mdash; celebrity-manage{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-6 py-20">
+  <div class="card p-8">
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 rounded-xl bg-[#C9A84C]/10 border border-[#C9A84C]/25 flex items-center justify-center mx-auto mb-4"><i data-lucide="mic" class="w-6 h-6 text-[#C9A84C]"></i></div>
+      <h1 class="text-2xl font-black tracking-tight">Confirm Registration</h1>
+      <p class="text-zinc-500 text-sm mt-1.5">You&rsquo;re about to register for this event</p>
+    </div>
+    <div class="space-y-3 bg-[#0d0d0d] border border-[#1e1e1e] rounded-lg p-5 mb-7">
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Event</span><span class="font-semibold text-right max-w-[55%] leading-snug">{{ event.title }}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Celebrity</span><span class="font-semibold">{{ event.celebrity.name }}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Date</span><span>{{ event.event_date|date:"M j, Y · g:i A" }}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Location</span><span class="text-right max-w-xs text-zinc-300">{{ event.location }}</span></div>
+      <hr class="gold-line" />
+      <div class="flex justify-between text-base font-black">
+        <span>Fee</span>
+        <span class="{% if event.is_free %}text-green-400{% else %}text-[#C9A84C]{% endif %}">{% if event.is_free %}Free{% else %}${{ event.ticket_price }}{% endif %}</span>
+      </div>
+    </div>
+    {% if event.is_free %}
+    <!-- Free event — no payment needed -->
+    <div class="flex items-center gap-2.5 bg-green-500/10 border border-green-500/25 rounded-lg px-4 py-3 mb-5">
+      <i data-lucide="check-circle" class="w-4 h-4 text-green-400 flex-shrink-0"></i>
+      <p class="text-sm text-green-300 font-medium">This event is free &mdash; no payment required.</p>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="payment_method" value="free">
+      <button type="submit" class="w-full btn-gold py-3.5 text-base">Confirm Registration</button>
+    </form>
+    {% else %}
+    <!-- Paid event — payment method selector -->
+    <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-600 mb-3">Payment Method</p>
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <button type="button" id="btn-bank" onclick="selectMethod('bank_transfer')"
+        class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-[#C9A84C] bg-[#C9A84C]/5 transition-all cursor-pointer">
+        <i data-lucide="building-2" class="w-5 h-5 text-[#C9A84C]"></i>
+        <span class="text-xs font-bold text-zinc-200">Bank Transfer</span>
+      </button>
+      <button type="button" id="btn-gift" onclick="selectMethod('gift_card')"
+        class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-[#2a2a2a] bg-[#0d0d0d] transition-all cursor-pointer hover:border-zinc-600">
+        <i data-lucide="gift" class="w-5 h-5 text-zinc-400"></i>
+        <span class="text-xs font-bold text-zinc-400">Gift Card</span>
+      </button>
+    </div>
+
+    <!-- Bank transfer info -->
+    <div id="panel-bank" class="bg-[#0d0d0d] border border-[#C9A84C]/20 rounded-lg p-5 mb-5 space-y-2.5">
+      <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-1.5">
+        <i data-lucide="info" class="w-3.5 h-3.5 text-[#C9A84C]"></i> Account Details
+      </p>
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Bank</span><span class="text-zinc-200 font-semibold">StarHub Bank</span></div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Account Name</span><span class="text-zinc-200 font-semibold">Celebrity Manage Ltd</span></div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Account No.</span><span class="text-zinc-200 font-bold tracking-wider">0123 4567 89</span></div>
+      <div class="flex justify-between text-sm"><span class="text-zinc-500">Sort Code</span><span class="text-zinc-200 font-bold">01-23-45</span></div>
+      <p class="text-[11px] text-zinc-600 pt-1 border-t border-[#1e1e1e]">Full account details will be sent to your email. Registration is confirmed once payment is verified.</p>
+    </div>
+
+    <!-- Gift card upload -->
+    <div id="panel-gift" class="hidden bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg p-5 mb-5">
+      <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-3 flex items-center gap-1.5">
+        <i data-lucide="upload" class="w-3.5 h-3.5 text-[#C9A84C]"></i> Upload Gift Card
+      </p>
+      <label class="block w-full border-2 border-dashed border-[#2a2a2a] hover:border-[#C9A84C]/40 rounded-lg p-5 text-center cursor-pointer transition-colors">
+        <i data-lucide="image" class="w-6 h-6 text-zinc-600 mx-auto mb-2"></i>
+        <span class="text-sm text-zinc-500">Click to upload gift card image</span>
+        <span class="block text-[11px] text-zinc-700 mt-1">PNG, JPG, WEBP up to 5MB</span>
+        <input type="file" name="gift_card_image" accept="image/*" class="hidden" id="gc-input" onchange="previewGC(this)">
+      </label>
+      <p id="gc-name" class="text-[12px] text-[#C9A84C] mt-2 hidden"></p>
+      <p class="text-[11px] text-zinc-600 mt-3">Your gift card will be reviewed. Registration confirmed once approved.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="pay-form">
+      {% csrf_token %}
+      <input type="hidden" name="payment_method" id="payment-method-input" value="bank_transfer">
+      <button type="submit" class="w-full btn-gold py-3.5 text-base">Submit Request &mdash; ${{ event.ticket_price }}</button>
+    </form>
+    {% endif %}
+    <a href="{% url 'event_detail' event.celebrity.slug event.slug %}" class="block text-center mt-4 text-sm text-zinc-600 hover:text-zinc-300 transition-colors inline-flex items-center justify-center gap-1"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Cancel</a>
+  </div>
+  <p class="text-center text-[11px] text-zinc-700 mt-4">Your request will be reviewed before confirmation.</p>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function selectMethod(method) {
+  document.getElementById('payment-method-input').value = method;
+  const bankBtn = document.getElementById('btn-bank');
+  const giftBtn = document.getElementById('btn-gift');
+  const bankPanel = document.getElementById('panel-bank');
+  const giftPanel = document.getElementById('panel-gift');
+  if (method === 'bank_transfer') {
+    bankBtn.className = bankBtn.className.replace('border-[#2a2a2a] bg-[#0d0d0d]','border-[#C9A84C] bg-[#C9A84C]/5');
+    giftBtn.className = giftBtn.className.replace('border-[#C9A84C] bg-[#C9A84C]/5','border-[#2a2a2a] bg-[#0d0d0d]');
+    bankPanel.classList.remove('hidden'); giftPanel.classList.add('hidden');
+  } else {
+    giftBtn.className = giftBtn.className.replace('border-[#2a2a2a] bg-[#0d0d0d]','border-[#C9A84C] bg-[#C9A84C]/5');
+    bankBtn.className = bankBtn.className.replace('border-[#C9A84C] bg-[#C9A84C]/5','border-[#2a2a2a] bg-[#0d0d0d]');
+    giftPanel.classList.remove('hidden'); bankPanel.classList.add('hidden');
+  }
+}
+function previewGC(input) {
+  const name = document.getElementById('gc-name');
+  if (input.files && input.files[0]) {
+    name.textContent = '\u2714 ' + input.files[0].name;
+    name.classList.remove('hidden');
+  }
+}
+const payForm = document.getElementById('pay-form');
+if (payForm) {
+  payForm.addEventListener('submit', function() {
+    const input = document.getElementById('gc-input');
+    if (input && input.closest('form') !== this) this.appendChild(input);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ action }} — celebrity-manage{% endblock %}
+{% block nav_foundations %}active{% endblock %}
+{% block page_title %}{{ action }}{% endblock %}
+{% block page_subtitle %}Foundation details{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'panel_foundations' %}" class="btn-ghost">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Foundation Info</p>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Celebrity *</label>
+        {{ form.celebrity }}
+        {% if form.celebrity.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.celebrity.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Foundation Name *</label>
+        {{ form.name }}
+        {% if form.name.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Description *</label>
+        {{ form.description }}
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Cause Type</label>
+        {{ form.cause_type }}
+      </div>
+    </div>
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Funding</p>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Target Amount ($) *</label>
+          {{ form.target_amount }}
+          {% if form.target_amount.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.target_amount.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Amount Raised ($)</label>
+          {{ form.amount_raised }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Media & Visibility</p>
+      {% if obj.cover_image %}<img src="{{ obj.cover_image.url }}" class="h-24 w-full rounded-lg object-cover mb-2 border border-[#2a2a2a]" />{% endif %}
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Cover Image</label>
+        {{ form.cover_image }}
+      </div>
+      <label class="flex items-center gap-2 cursor-pointer text-[13px] font-semibold text-zinc-300">
+        {{ form.is_active }} Active (visible to users)
+      </label>
+    </div>
+
+    <div class="flex items-center gap-3 pt-1">
+      <button type="submit" class="btn-gold px-8">Save Foundation</button>
+      <a href="{% url 'panel_foundations' %}" class="btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

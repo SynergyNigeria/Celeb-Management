@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}celebrity-manage — Fan Platform{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section class="relative overflow-hidden bg-black pt-20 pb-28 px-6 text-center">
+  <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(201,168,76,.07) 0%,transparent 70%)"></div>
+  <div class="relative max-w-3xl mx-auto">
+    <div class="inline-flex items-center gap-2 bg-[#161616] border border-[#C9A84C]/30 text-[#C9A84C] text-[11px] font-bold px-4 py-1.5 rounded-full mb-8 tracking-[.15em] uppercase">
+      <i data-lucide="star" class="w-3 h-3 fill-current"></i><span>Celebrity Fan Platform</span>
+    </div>
+    <h1 class="text-5xl md:text-7xl font-black leading-[1.05] mb-6 tracking-tight">
+      Connect With<br/>Your <span class="text-[#C9A84C]">Favourite</span> Stars
+    </h1>
+    <p class="text-zinc-400 text-lg max-w-lg mx-auto mb-10 leading-relaxed">
+      Exclusive memberships, charitable foundations, and live events &mdash; all in one place.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="#celebs" class="btn-gold px-10 py-3.5 text-[15px]">Explore Celebrities</a>
+      {% if not user.is_authenticated %}
+      <a href="{% url 'register' %}" class="btn-ghost px-10 py-3.5 text-[15px]">Join For Free</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="bg-[#111] border-y border-[#1e1e1e]">
+  <div class="max-w-4xl mx-auto px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    <div>
+      <div class="text-3xl font-black text-[#C9A84C]">{{ celebs.count }}</div>
+      <div class="text-[10px] text-zinc-600 mt-1 uppercase tracking-[.15em]">Celebrities</div>
+    </div>
+    <div>
+      <div class="text-3xl font-black text-[#C9A84C]">{{ total_events }}</div>
+      <div class="text-[10px] text-zinc-600 mt-1 uppercase tracking-[.15em]">Events</div>
+    </div>
+    <div>
+      <div class="text-3xl font-black text-[#C9A84C]">{{ total_foundations }}</div>
+      <div class="text-[10px] text-zinc-600 mt-1 uppercase tracking-[.15em]">Foundations</div>
+    </div>
+    <div>
+      <div class="text-3xl font-black text-[#C9A84C]">{{ total_members }}+</div>
+      <div class="text-[10px] text-zinc-600 mt-1 uppercase tracking-[.15em]">Members</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURED -->
+{% if featured %}
+<section class="max-w-7xl mx-auto px-6 pt-16">
+  <div class="flex items-center gap-3 mb-6">
+    <span class="text-[#C9A84C] text-xs font-black tracking-[.2em] uppercase inline-flex items-center gap-1.5"><i data-lucide="star" class="w-3 h-3 fill-current"></i> Featured</span>
+    <hr class="flex-1 border-[#1e1e1e]" />
+  </div>
+  <div class="grid md:grid-cols-2 gap-4">
+    {% for c in featured %}
+    <a href="{% url 'celeb_detail' c.slug %}" class="relative block rounded-xl overflow-hidden h-72 group">
+      {% if c.cover_image %}
+        <img src="{{ c.cover_image.url }}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 group-hover:scale-105 transition-all duration-500" alt="{{ c.name }}" />
+      {% elif c.photo %}
+        <img src="{{ c.photo.url }}" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-65 group-hover:scale-105 transition-all duration-500" alt="{{ c.name }}" />
+      {% else %}
+        <div class="absolute inset-0 bg-[#111]"></div>
+      {% endif %}
+      <div class="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent"></div>
+      <div class="absolute top-4 left-4 z-10">
+        <span class="inline-flex items-center gap-1.5 bg-black/70 border border-[#C9A84C]/40 text-[#C9A84C] text-[11px] font-bold px-3 py-1 rounded-full tracking-[.1em] uppercase"><i data-lucide="star" class="w-3 h-3 fill-current"></i> Featured</span>
+      </div>
+      <div class="absolute bottom-0 left-0 p-7 z-10">
+        <p class="text-[#C9A84C] text-[11px] font-bold uppercase tracking-[.15em] mb-1.5">{{ c.get_category_display }}</p>
+        <h3 class="text-3xl font-black tracking-tight">{{ c.name }}</h3>
+        {% if c.tagline %}<p class="text-zinc-400 text-sm mt-1">{{ c.tagline }}</p>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- SEARCH + FILTER -->
+<section id="celebs" class="max-w-7xl mx-auto px-6 pt-14">
+  <div class="flex flex-col md:flex-row gap-5 items-start md:items-end justify-between mb-8">
+    <div>
+      <p class="text-[#C9A84C] text-[11px] font-bold uppercase tracking-[.2em] mb-1">Browse</p>
+      <h2 class="text-3xl font-black tracking-tight">All Celebrities</h2>
+    </div>
+    <form method="get" action="{% url 'home' %}#celebs" class="flex flex-wrap gap-2.5">
+      <input name="q" value="{{ search }}" type="text" placeholder="Search name&hellip;" class="input-field w-44 text-sm" />
+      <select name="category" class="input-field w-40 text-sm">
+        <option value="">All Categories</option>
+        {% for val, label in categories %}
+        <option value="{{ val }}" {% if category == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-gold py-[.65rem] px-5 text-sm">Filter</button>
+      {% if search or category %}
+      <a href="{% url 'home' %}" class="btn-ghost py-[.65rem] px-4 text-sm">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  {% if celebs %}
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    {% for c in celebs %}
+    <a href="{% url 'celeb_detail' c.slug %}" class="relative block rounded-xl overflow-hidden bg-[#111] celeb-card group h-72 border border-[#1e1e1e] hover:border-[#C9A84C]/30 transition-colors">
+      {% if c.photo %}
+        <img src="{{ c.photo.url }}" alt="{{ c.name }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80" />
+      {% else %}
+        <div class="absolute inset-0 bg-[#161616]"></div>
+      {% endif %}
+      {% if c.is_featured %}
+      <div class="absolute top-3 right-3 z-10 bg-black/80 border border-[#C9A84C]/50 text-[#C9A84C] text-[10px] font-black px-2.5 py-1 rounded-full tracking-[.1em] inline-flex items-center gap-1"><i data-lucide="star" class="w-2.5 h-2.5 fill-current"></i> FEATURED</div>
+      {% endif %}
+      <div class="absolute bottom-0 left-0 right-0 z-[2] p-4">
+        <span class="text-[10px] font-bold px-2.5 py-1 rounded bg-black/60 border border-white/10 capitalize mb-2 inline-block text-zinc-300 tracking-[.05em]">{{ c.get_category_display }}</span>
+        <h3 class="text-base font-black leading-tight tracking-tight">{{ c.name }}</h3>
+        {% if c.nationality %}<p class="text-zinc-500 text-[11px] mt-0.5">{{ c.nationality }}</p>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="py-24 text-center text-zinc-600">
+    <i data-lucide="search" class="w-12 h-12 opacity-50 mx-auto mb-4"></i>
+    <p class="text-base font-semibold">No celebrities found.</p>
+    <a href="{% url 'home' %}" class="text-[#C9A84C] text-sm mt-3 inline-block hover:underline">Clear filters</a>
+  </div>
+  {% endif %}
+  <div class="h-20"></div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+// Smooth scroll to #celebs on load
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.location.hash === "#celebs") document.getElementById("celebs")?.scrollIntoView({ behavior: "smooth" });
+});
+
+// === GSAP: home page animations ===
+// 1. Hero entrance
+gsap.timeline({ delay: 0.15 })
+  .from(".hero-bg .inline-flex, section .inline-flex", { opacity: 0, y: 18, duration: 0.55, ease: "power3.out" }, 0)
+  .from("section h1", { opacity: 0, y: 30, duration: 0.65, ease: "power3.out" }, "-=0.35")
+  .from("section > div > p", { opacity: 0, y: 18, duration: 0.55, ease: "power3.out" }, "-=0.38")
+  .from("section .flex.flex-col a, section .flex.flex-row a", { opacity: 0, y: 15, duration: 0.45, ease: "power3.out", stagger: 0.1 }, "-=0.32");
+
+// Re-target hero section precisely
+(function() {
+  const hero = document.querySelector("section.relative.overflow-hidden");
+  if (!hero) return;
+  const badge  = hero.querySelector(".inline-flex");
+  const h1     = hero.querySelector("h1");
+  const desc   = hero.querySelector("p");
+  const btns   = hero.querySelectorAll(".flex a");
+  gsap.set([badge, h1, desc, ...btns], { opacity: 1 }); // reset any leftover
+  const tl = gsap.timeline({ delay: 0.15 });
+  if (badge) tl.from(badge, { opacity: 0, y: 18, duration: 0.55, ease: "power3.out" }, 0);
+  if (h1)    tl.from(h1, { opacity: 0, y: 30, duration: 0.65, ease: "power3.out" }, 0.12);
+  if (desc)  tl.from(desc, { opacity: 0, y: 18, duration: 0.55, ease: "power3.out" }, 0.24);
+  if (btns.length) tl.from(btns, { opacity: 0, y: 15, duration: 0.45, ease: "power3.out", stagger: 0.1 }, 0.35);
+})();
+
+// 2. Stats bar counter animation
+document.querySelectorAll(".text-3xl.font-black.text-\\[\\#C9A84C\\]").forEach(el => {
+  const raw = el.textContent.replace(/[^0-9]/g, "");
+  const target = parseInt(raw, 10);
+  if (isNaN(target) || target === 0) return;
+  const obj = { val: 0 };
+  ScrollTrigger.create({
+    trigger: el, start: "top 90%", once: true,
+    onEnter: () => gsap.to(obj, { val: target, duration: 1.4, ease: "power2.out",
+      onUpdate: () => { el.textContent = Math.round(obj.val) + (el.textContent.includes("+") ? "+" : ""); }
+    })
+  });
+});
+
+// 3. Featured section reveal
+const featured = document.querySelector(".grid.md\\:grid-cols-2 a, .grid.md\\:grid-cols-2 > a")?.closest("section");
+if (featured) {
+  gsap.from(featured.querySelectorAll("a"), {
+    opacity: 0, y: 35, duration: 0.55, ease: "power3.out", stagger: 0.1,
+    scrollTrigger: { trigger: featured, start: "top 82%" }
+  });
+}
+
+// 4. Celebrity grid cards
+const celebGrid = document.querySelector(".grid.grid-cols-2");
+if (celebGrid) {
+  gsap.from(celebGrid.children, {
+    opacity: 0, y: 40, duration: 0.5, ease: "power3.out", stagger: 0.07,
+    scrollTrigger: { trigger: celebGrid, start: "top 85%" }
+  });
+}
+</script>
+{% endblock %}

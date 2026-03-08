@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Foundations &amp; Causes &mdash; celebrity-manage{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-14">
+  <div class="mb-12">
+    <p class="text-[#C9A84C] text-[11px] font-bold uppercase tracking-[.2em] mb-2">Give Back</p>
+    <h1 class="text-4xl font-black tracking-tight mb-1">Foundations <span class="text-[#C9A84C]">&amp; Causes</span></h1>
+    <p class="text-zinc-500 text-sm">Make a difference through foundations backed by your favourite stars</p>
+  </div>
+  <form method="get" class="flex flex-wrap gap-3 mb-10">
+    <select name="celeb" onchange="this.form.submit()" class="input-field w-52 text-sm">
+      <option value="">All Celebrities</option>
+      {% for c in celebs %}
+      <option value="{{ c.slug }}" {% if selected_slug == c.slug %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    {% if selected_slug %}
+    <a href="{% url 'foundations' %}" class="btn-ghost py-[.65rem] px-4 text-sm">Clear</a>
+    {% endif %}
+  </form>
+  {% if foundations %}
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for f in foundations %}
+    <div class="card overflow-hidden flex flex-col">
+      {% if f.cover_image %}
+        <img src="{{ f.cover_image.url }}" class="w-full h-40 object-cover" />
+      {% else %}
+        <div class="h-40 bg-[#161616] flex items-center justify-center">
+          <i data-lucide="heart" class="w-16 h-16 text-[#C9A84C]/30"></i>
+        </div>
+      {% endif %}
+      <div class="p-6 flex flex-col flex-1">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold text-[#C9A84C] tracking-[.05em]">{{ f.celebrity.name }}</span>
+          {% if f.cause_type %}<span class="text-[10px] bg-[#161616] border border-[#2a2a2a] px-2.5 py-0.5 rounded text-zinc-500 font-semibold">{{ f.cause_type }}</span>{% endif %}
+        </div>
+        <h3 class="text-base font-bold mb-2 tracking-tight">{{ f.name }}</h3>
+        <p class="text-zinc-500 text-[13px] mb-4 line-clamp-2 leading-relaxed flex-1">{{ f.description }}</p>
+        <div class="flex justify-between text-[11px] text-zinc-600 mb-1.5">
+          <span class="font-semibold">${{ f.amount_raised }} raised</span>
+          <span class="text-[#C9A84C] font-bold">{{ f.progress_pct }}% of ${{ f.target_amount }}</span>
+        </div>
+        <div class="progress-track mb-4">
+          <div class="progress-fill" style="width:{% widthratio f.amount_raised f.target_amount 100 %}%"></div>
+        </div>
+        <div class="flex justify-between items-center text-[11px] text-zinc-600 mb-4">
+          <span>{{ f.donations.count }} donor{% if f.donations.count != 1 %}s{% endif %}</span>
+        </div>
+        <a href="{% url 'donate_foundation' f.pk %}" class="block text-center btn-gold py-2.5 text-sm mt-auto">Donate Now</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-20 text-zinc-600">
+    <i data-lucide="heart" class="w-12 h-12 opacity-30 mx-auto mb-4"></i>
+    <p class="text-base font-semibold">No foundations found.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

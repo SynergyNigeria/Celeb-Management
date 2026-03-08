@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Donate &mdash; {{ foundation.name }} &mdash; celebrity-manage{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-14">
+  <nav class="text-[12px] text-zinc-600 mb-10 flex items-center gap-2">
+    <a href="{% url 'foundations' %}" class="hover:text-[#C9A84C] transition-colors">Foundations</a>
+    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+    <a href="{% url 'celeb_detail' foundation.celebrity.slug %}" class="hover:text-[#C9A84C] transition-colors">{{ foundation.celebrity.name }}</a>
+    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i><span class="text-zinc-400">{{ foundation.name }}</span>
+  </nav>
+  <div class="grid md:grid-cols-2 gap-10">
+    <!-- Left -->
+    <div>
+      {% if foundation.cover_image %}
+        <img src="{{ foundation.cover_image.url }}" class="w-full h-52 object-cover rounded-xl mb-6" />
+      {% endif %}
+      <p class="text-[#C9A84C] text-[11px] font-bold uppercase tracking-[.2em] mb-2">{{ foundation.celebrity.name }}</p>
+      <h1 class="text-3xl font-black tracking-tight mb-3">{{ foundation.name }}</h1>
+      <p class="text-zinc-300 leading-relaxed mb-6 text-[15px]">{{ foundation.description }}</p>
+      <div class="card p-5 mb-6">
+        <div class="flex justify-between text-sm mb-2.5">
+          <span class="text-zinc-500">Amount Raised</span>
+          <span class="font-black text-[#C9A84C]">${{ foundation.amount_raised }}</span>
+        </div>
+        <div class="progress-track mb-2.5">
+          <div class="progress-fill" style="width:{% widthratio foundation.amount_raised foundation.target_amount 100 %}%"></div>
+        </div>
+        <div class="flex justify-between text-[11px] text-zinc-600">
+          <span class="font-semibold text-[#C9A84C]">{{ foundation.progress_pct }}% of goal</span>
+          <span>Goal: ${{ foundation.target_amount }}</span>
+        </div>
+      </div>
+      {% if recent %}
+      <div>
+        <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-600 mb-3">Recent Donors</p>
+        <div class="space-y-2">
+          {% for d in recent %}
+          <div class="flex justify-between card px-4 py-3 text-sm">
+            <span class="text-zinc-300">{% if d.is_anonymous %}Anonymous{% else %}{{ d.user.name }}{% endif %}</span>
+            <span class="text-[#C9A84C] font-bold">${{ d.amount }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <!-- Right: form -->
+    <div>
+      <div class="card p-7 sticky top-24">
+        <h2 class="text-xl font-black mb-6 tracking-tight">Make a Donation</h2>
+        <div class="mb-5">
+          <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-3">Quick Amount</p>
+          <div class="flex flex-wrap gap-2" id="quick-btns">
+            <button type="button" onclick="setAmt(5,this)" class="quick-amt bg-[#161616] border border-[#2a2a2a] px-4 py-2 rounded text-sm font-bold transition-all hover:bg-[#C9A84C] hover:text-black hover:border-[#C9A84C]">$5</button>
+            <button type="button" onclick="setAmt(10,this)" class="quick-amt bg-[#161616] border border-[#2a2a2a] px-4 py-2 rounded text-sm font-bold transition-all hover:bg-[#C9A84C] hover:text-black hover:border-[#C9A84C]">$10</button>
+            <button type="button" onclick="setAmt(25,this)" class="quick-amt bg-[#161616] border border-[#2a2a2a] px-4 py-2 rounded text-sm font-bold transition-all hover:bg-[#C9A84C] hover:text-black hover:border-[#C9A84C]">$25</button>
+            <button type="button" onclick="setAmt(50,this)" class="quick-amt bg-[#161616] border border-[#2a2a2a] px-4 py-2 rounded text-sm font-bold transition-all hover:bg-[#C9A84C] hover:text-black hover:border-[#C9A84C]">$50</button>
+            <button type="button" onclick="setAmt(100,this)" class="quick-amt bg-[#161616] border border-[#2a2a2a] px-4 py-2 rounded text-sm font-bold transition-all hover:bg-[#C9A84C] hover:text-black hover:border-[#C9A84C]">$100</button>
+          </div>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="space-y-4" id="donate-form">
+          {% csrf_token %}
+          <input type="hidden" name="foundation" value="{{ foundation.pk }}">
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-1.5 block">Amount (USD) *</label>
+            {{ form.amount }}
+            {% if form.amount.errors %}<p class="text-red-400 text-[12px] mt-1">{{ form.amount.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-1.5 block">Message (optional)</label>
+            {{ form.message }}
+          </div>
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            {{ form.is_anonymous }}
+            <span class="text-sm text-zinc-400">Donate anonymously</span>
+          </label>
+          <!-- Payment method selector -->
+          <input type="hidden" name="payment_method" id="payment-method-input" value="bank_transfer">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-2">Payment Method</p>
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <button type="button" id="btn-bank" onclick="selectMethod('bank_transfer')"
+                class="flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 border-[#C9A84C] bg-[#C9A84C]/5 transition-all cursor-pointer">
+                <i data-lucide="building-2" class="w-4 h-4 text-[#C9A84C]"></i>
+                <span class="text-xs font-bold text-zinc-200">Bank Transfer</span>
+              </button>
+              <button type="button" id="btn-gift" onclick="selectMethod('gift_card')"
+                class="flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 border-[#2a2a2a] bg-[#0d0d0d] transition-all cursor-pointer hover:border-zinc-600">
+                <i data-lucide="gift" class="w-4 h-4 text-zinc-400"></i>
+                <span class="text-xs font-bold text-zinc-400">Gift Card</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bank info panel -->
+          <div id="panel-bank" class="bg-[#0d0d0d] border border-[#C9A84C]/20 rounded-lg px-4 py-3 space-y-1.5">
+            <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-2 flex items-center gap-1">
+              <i data-lucide="info" class="w-3 h-3 text-[#C9A84C]"></i> Account Details
+            </p>
+            <div class="flex justify-between text-xs"><span class="text-zinc-500">Bank</span><span class="text-zinc-200 font-semibold">***</span></div>
+            <div class="flex justify-between text-xs"><span class="text-zinc-500">Account Name</span><span class="text-zinc-200 font-semibold">*** *** ***</span></div>
+            <div class="flex justify-between text-xs"><span class="text-zinc-500">Account No.</span><span class="text-zinc-200 font-bold tracking-wider">***</span></div>
+            <div class="flex justify-between text-xs"><span class="text-zinc-500">Sort Code</span><span class="text-zinc-200 font-bold">**-**-**</span></div>
+            <p class="text-[11px] text-zinc-600 pt-1.5 border-t border-[#1e1e1e]">Full details sent to your email. Donation counted once verified.</p>
+          </div>
+
+          <!-- Gift card panel -->
+          <div id="panel-gift" class="hidden bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-4 py-3">
+            <p class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-2 flex items-center gap-1">
+              <i data-lucide="upload" class="w-3 h-3 text-[#C9A84C]"></i> Upload Gift Card
+            </p>
+            <label class="block w-full border-2 border-dashed border-[#2a2a2a] hover:border-[#C9A84C]/30 rounded-lg p-4 text-center cursor-pointer transition-colors">
+              <i data-lucide="image" class="w-5 h-5 text-zinc-600 mx-auto mb-1.5"></i>
+              <span class="text-xs text-zinc-500">Click to upload gift card image</span>
+              <span class="block text-[11px] text-zinc-700 mt-0.5">PNG, JPG, WEBP up to 5MB</span>
+              <input type="file" name="gift_card_image" accept="image/*" class="hidden" id="gc-input" onchange="previewGC(this)">
+            </label>
+            <p id="gc-name" class="text-[12px] text-[#C9A84C] mt-1.5 hidden"></p>
+            <p class="text-[11px] text-zinc-600 mt-2">Gift card reviewed by our team. Donation counted once approved.</p>
+          </div>
+
+          <button type="submit" class="w-full btn-gold py-3.5">Submit Donation</button>
+        </form>
+        <p class="text-center text-[11px] text-zinc-700 mt-3">Your donation is pending review before it counts toward the goal.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function setAmt(n,el){
+  document.querySelector('[name="amount"]').value=n;
+  document.querySelectorAll('.quick-amt').forEach(b=>{
+    b.style.background='#161616';b.style.color='';b.style.borderColor='#2a2a2a';
+  });
+  el.style.background='#C9A84C';el.style.color='#000';el.style.borderColor='#C9A84C';
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  document.querySelectorAll("input[type=number],textarea").forEach(el=>el.classList.add("input-field"));
+  document.querySelectorAll("input[type=checkbox]").forEach(el=>{
+    el.classList.add("w-4","h-4","cursor-pointer");
+    el.style.accentColor="#C9A84C";
+  });
+});
+function selectMethod(method) {
+  document.getElementById('payment-method-input').value = method;
+  const bankBtn = document.getElementById('btn-bank');
+  const giftBtn = document.getElementById('btn-gift');
+  const bankPanel = document.getElementById('panel-bank');
+  const giftPanel = document.getElementById('panel-gift');
+  if (method === 'bank_transfer') {
+    bankBtn.className = bankBtn.className.replace('border-[#2a2a2a] bg-[#0d0d0d]','border-[#C9A84C] bg-[#C9A84C]/5');
+    giftBtn.className = giftBtn.className.replace('border-[#C9A84C] bg-[#C9A84C]/5','border-[#2a2a2a] bg-[#0d0d0d]');
+    bankPanel.classList.remove('hidden'); giftPanel.classList.add('hidden');
+  } else {
+    giftBtn.className = giftBtn.className.replace('border-[#2a2a2a] bg-[#0d0d0d]','border-[#C9A84C] bg-[#C9A84C]/5');
+    bankBtn.className = bankBtn.className.replace('border-[#C9A84C] bg-[#C9A84C]/5','border-[#2a2a2a] bg-[#0d0d0d]');
+    giftPanel.classList.remove('hidden'); bankPanel.classList.add('hidden');
+  }
+}
+function previewGC(input) {
+  const name = document.getElementById('gc-name');
+  if (input.files && input.files[0]) {
+    name.textContent = '\u2714 ' + input.files[0].name;
+    name.classList.remove('hidden');
+  }
+}
+document.getElementById('donate-form').addEventListener('submit', function() {
+  const input = document.getElementById('gc-input');
+  if (input && input.closest('form') !== this) this.appendChild(input);
+});
+
+// === GSAP: donate page animations ===
+// 1. Breadcrumb + header entrance
+(function() {
+  const nav   = document.querySelector("nav.text-\\[12px\\]");
+  const label = document.querySelector(".text-\\[\\#C9A84C\\].text-\\[11px\\]");
+  const h1    = document.querySelector("h1");
+  const tl = gsap.timeline({ delay: 0.15 });
+  if (nav)   tl.from(nav,   { opacity: 0, y: 10, duration: 0.4, ease: "power3.out" }, 0);
+  if (label) tl.from(label, { opacity: 0, y: 14, duration: 0.5, ease: "power3.out" }, 0.1);
+  if (h1)    tl.from(h1,    { opacity: 0, y: 22, duration: 0.6, ease: "power3.out" }, 0.18);
+})();
+
+// 2. Two-column grid
+(function() {
+  const cols = document.querySelectorAll(".grid.md\\:grid-cols-2 > div");
+  if (cols.length) {
+    gsap.from(cols, {
+      opacity: 0, y: 35, duration: 0.6, ease: "power3.out", stagger: 0.15, delay: 0.3
+    });
+  }
+})();
+
+// 3. Recent donors list
+const recentItems = document.querySelectorAll(".space-y-2 > .flex.justify-between");
+if (recentItems.length) {
+  gsap.from(recentItems, {
+    opacity: 0, x: -20, duration: 0.45, ease: "power3.out", stagger: 0.08,
+    scrollTrigger: { trigger: recentItems[0], start: "top 88%" }
+  });
+}
+</script>
+{% endblock %}

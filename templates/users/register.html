@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Create Account &mdash; celebrity-manage{% endblock %}
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-20">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <a href="{% url 'home' %}" class="inline-flex items-center gap-2 mb-6 select-none">
+        <i data-lucide="star" class="w-4 h-4 text-[#C9A84C] fill-current"></i>
+        <span class="font-black text-[17px]">celebrity<span class="text-[#C9A84C]">-manage</span></span>
+      </a>
+      <h2 class="text-2xl font-black tracking-tight mb-1">Create Your Account</h2>
+      <p class="text-zinc-500 text-sm">Join the platform and access exclusive fan content</p>
+    </div>
+    <div class="card p-8">
+      <form method="post" class="space-y-5">
+        {% csrf_token %}
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-1.5 block">Full Name</label>
+          {{ form.name }}
+          {% if form.name.errors %}<p class="text-red-400 text-[12px] mt-1">{{ form.name.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-1.5 block">Email Address</label>
+          {{ form.email }}
+          {% if form.email.errors %}<p class="text-red-400 text-[12px] mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-1.5 block">Country</label>
+          {{ form.country }}
+          {% if form.country.errors %}<p class="text-red-400 text-[12px] mt-1">{{ form.country.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-1.5 block">Password</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}<p class="text-red-400 text-[12px] mt-1">{{ form.password1.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-[.2em] text-zinc-500 mb-1.5 block">Confirm Password</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}<p class="text-red-400 text-[12px] mt-1">{{ form.password2.errors.0 }}</p>{% endif %}
+        </div>
+        {% if form.non_field_errors %}
+        <div class="bg-[#1f0c0c] border border-[#4a1616] rounded-lg p-3 text-red-300 text-[13px]">
+          {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+        </div>
+        {% endif %}
+        <button type="submit" class="w-full btn-gold py-3.5 text-base mt-2">Create Account</button>
+      </form>
+      <hr class="gold-line my-6" />
+      <p class="text-center text-[13px] text-zinc-500">
+        Already have an account?
+        <a href="{% url 'login' %}" class="text-[#C9A84C] hover:underline font-bold ml-1">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>document.querySelectorAll("input").forEach(el=>el.classList.add("input-field"));</script>
+{% endblock %}

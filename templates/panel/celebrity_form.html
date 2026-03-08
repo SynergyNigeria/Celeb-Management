@@ -1,0 +1,105 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ action }} — celebrity-manage{% endblock %}
+{% block nav_celebrities %}active{% endblock %}
+{% block page_title %}{{ action }}{% endblock %}
+{% block page_subtitle %}Celebrity profile{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'panel_celebrities' %}" class="btn-ghost">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <div class="card p-6 space-y-5">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Basic Info</p>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Name *</label>
+          {{ form.name }}
+          {% if form.name.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Slug *</label>
+          {{ form.slug }}
+          {% if form.slug.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.slug.errors|join:", " }}</p>{% endif %}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Tagline</label>
+        {{ form.tagline }}
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Bio *</label>
+        {{ form.bio }}
+        {% if form.bio.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.bio.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Category</label>
+          {{ form.category }}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Nationality</label>
+          {{ form.nationality }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-6 space-y-5">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Media</p>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Profile Photo</label>
+          {% if obj.photo %}<img src="{{ obj.photo.url }}" class="w-16 h-16 rounded-lg object-cover mb-2 border border-[#2a2a2a]" />{% endif %}
+          {{ form.photo }}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Cover Image</label>
+          {% if obj.cover_image %}<img src="{{ obj.cover_image.url }}" class="w-full h-16 rounded-lg object-cover mb-2 border border-[#2a2a2a]" />{% endif %}
+          {{ form.cover_image }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Social Links</p>
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Instagram URL</label>
+        {{ form.instagram }}
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Twitter / X URL</label>
+        {{ form.twitter }}
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">YouTube URL</label>
+        {{ form.youtube }}
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest mb-4">Visibility</p>
+      <div class="flex gap-6">
+        <label class="flex items-center gap-2 cursor-pointer text-[13px] font-semibold text-zinc-300">
+          {{ form.is_active }} Active
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer text-[13px] font-semibold text-zinc-300">
+          {{ form.is_featured }} Featured on Home
+        </label>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-1">
+      <button type="submit" class="btn-gold px-8">Save Celebrity</button>
+      <a href="{% url 'panel_celebrities' %}" class="btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

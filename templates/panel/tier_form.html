@@ -1,0 +1,71 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ action }} — celebrity-manage{% endblock %}
+{% block nav_tiers %}active{% endblock %}
+{% block page_title %}{{ action }}{% endblock %}
+{% block page_subtitle %}Membership tier details{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'panel_tiers' %}" class="btn-ghost">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-xl">
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+
+    <div class="card p-6 space-y-4">
+      <p class="text-[11px] font-bold text-[#555] uppercase tracking-widest">Tier Details</p>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Celebrity *</label>
+        {{ form.celebrity }}
+        {% if form.celebrity.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.celebrity.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Tier Name *</label>
+          {{ form.name }}
+          {% if form.name.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Badge Color</label>
+          {{ form.badge_color }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Description</label>
+        {{ form.description }}
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Price ($) *</label>
+          {{ form.price }}
+          {% if form.price.errors %}<p class="text-red-400 text-[11px] mt-1">{{ form.price.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Duration (days)</label>
+          {{ form.duration_days }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-[#888] mb-1.5 uppercase tracking-wider">Benefits</label>
+        <p class="text-[11px] text-[#555] mb-1.5">One benefit per line</p>
+        {{ form.benefits }}
+      </div>
+
+      <label class="flex items-center gap-2 cursor-pointer text-[13px] font-semibold text-zinc-300">
+        {{ form.is_active }} Active (visible to fans)
+      </label>
+    </div>
+
+    <div class="flex items-center gap-3 pt-1">
+      <button type="submit" class="btn-gold px-8">Save Tier</button>
+      <a href="{% url 'panel_tiers' %}" class="btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
