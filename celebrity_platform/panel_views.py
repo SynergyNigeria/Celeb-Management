@@ -3,6 +3,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.utils.text import slugify
 from django.db.models import Sum, Count
+from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 
 from celebs.models import Celebrity
@@ -84,8 +85,18 @@ def panel_celebrity_delete(request, pk):
     celeb = get_object_or_404(Celebrity, pk=pk)
     if request.method == "POST":
         name = celeb.name
-        celeb.delete()
-        messages.success(request, f"'{name}' deleted.")
+        try:
+            celeb.delete()
+            messages.success(request, f"'{name}' deleted.")
+        except ProtectedError as e:
+            # Collect the model names blocking deletion
+            blocking = set(obj.__class__.__name__ for obj in e.protected_objects)
+            blocking_str = ", ".join(sorted(blocking))
+            messages.error(
+                request,
+                f"Cannot delete '{name}' — it is still linked to: {blocking_str}. "
+                f"Remove or reassign those records first."
+            )
         return redirect("panel_celebrities")
     return render(request, "panel/confirm_delete.html", {"obj": celeb, "obj_type": "Celebrity", "cancel_url": "panel_celebrities"})
 
