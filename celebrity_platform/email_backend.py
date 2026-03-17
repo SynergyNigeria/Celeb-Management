@@ -1,50 +1,53 @@
 """
-Custom SMTP backend that uses certifi's CA bundle.
+Custom email backend that uses Resend's HTTP API instead of SMTP.
 
-Needed on Windows with Python 3.12+ where the bundled SSL certificates
-don't cover all CAs (e.g. Resend's cert chain), causing
-CERTIFICATE_VERIFY_FAILED errors.
+Render's free tier blocks outbound SMTP ports (465/587), so we send
+via Resend's REST API over HTTPS (port 443) which is always open.
 """
-import ssl
-import smtplib
-
-import certifi
-from django.core.mail.backends.smtp import EmailBackend as _DjangoSMTPBackend
-from django.core.mail.utils import DNS_NAME
+import resend
+from django.conf import settings
+from django.core.mail.backends.base import BaseEmailBackend
 
 
-class EmailBackend(_DjangoSMTPBackend):
-    """Drop-in replacement that forces SSL verification via certifi."""
+class EmailBackend(BaseEmailBackend):
+    """Sends email via Resend HTTP API — works on Render free tier."""
 
     def open(self):
-        if self.connection:
-            return False
+        resend.api_key = settings.RESEND_API_KEY
+        return True
 
-        connection_params = {"local_hostname": DNS_NAME.get_fqdn()}
-        if self.timeout is not None:
-            connection_params["timeout"] = self.timeout
+    def close(self):
+        pass
 
-        # Build an SSL context that trusts certifi's CA bundle
-        ssl_context = ssl.create_default_context(cafile=certifi.where())
-        if self.ssl_keyfile:
-            ssl_context.load_cert_chain(certfile=self.ssl_certfile, keyfile=self.ssl_keyfile)
+    def send_messages(self, email_messages):
+        resend.api_key = settings.RESEND_API_KEY
+        sent = 0
+        for msg in email_messages:
+            try:
+                to = msg.to if isinstance(msg.to, list) else list(msg.to)
+                body = msg.body
 
-        try:
-            if self.use_ssl:
-                # Port 465 — direct SSL/TLS (Resend's recommended setup)
-                connection_params["context"] = ssl_context
-                self.connection = smtplib.SMTP_SSL(self.host, self.port, **connection_params)
-            else:
-                self.connection = smtplib.SMTP(self.host, self.port, **connection_params)
-                if self.use_tls:
-                    # Port 587 — STARTTLS upgrade
-                    self.connection.ehlo()
-                    self.connection.starttls(context=ssl_context)
-                    self.connection.ehlo()
+                # Use HTML alternative if available
+                html_body = None
+                for content, mimetype in getattr(msg, "alternatives", []):
+                    if mimetype == "text/html":
+                        html_body = content
+                        break
 
-            if self.username and self.password:
-                self.connection.login(self.username, self.password)
-            return True
-        except OSError:
-            if not self.fail_silently:
-                raise
+                params = {
+                    "from": msg.from_email or settings.DEFAULT_FROM_EMAIL,
+                    "to": to,
+                    "subject": msg.subject,
+                }
+                if html_body:
+                    params["html"] = html_body
+                else:
+                    params["text"] = body
+
+                resend.Emails.send(params)
+                sent += 1
+            except Exception:
+                if not self.fail_silently:
+                    raise
+        return sent
+

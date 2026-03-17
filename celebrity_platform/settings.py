@@ -101,16 +101,11 @@ LOGIN_URL = "/auth/login/"
 LOGIN_REDIRECT_URL = "/auth/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
 
-# ─── Email (Resend SMTP) ─────────────────────────────────────────────────────
-# Custom backend injects certifi CA bundle — fixes SSL cert errors on Windows + Python 3.12+
-EMAIL_BACKEND   = "celebrity_platform.email_backend.EmailBackend"
-EMAIL_HOST      = config("EMAIL_HOST",      default="smtp.resend.com")
-EMAIL_PORT      = config("EMAIL_PORT",      default=465, cast=int)
-EMAIL_USE_TLS   = config("EMAIL_USE_TLS",   default=False, cast=bool)
-EMAIL_USE_SSL   = config("EMAIL_USE_SSL",   default=True,  cast=bool)
-EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="resend")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
-DEFAULT_FROM_EMAIL   = config("DEFAULT_FROM_EMAIL", default="")
+# ─── Email (Resend HTTP API) ──────────────────────────────────────────────────
+# Uses Resend's HTTP API instead of SMTP — works on Render free tier (SMTP ports blocked)
+EMAIL_BACKEND      = "celebrity_platform.email_backend.EmailBackend"
+RESEND_API_KEY     = config("RESEND_API_KEY", default="")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="")
 
 # Your personal inbox that receives all payment notifications
 ADMIN_NOTIFICATION_EMAIL = config("ADMIN_NOTIFICATION_EMAIL", default=DEFAULT_FROM_EMAIL)
