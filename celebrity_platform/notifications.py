@@ -61,7 +61,7 @@ Status:      {purchase.payment_status.upper()}
 
 {'A gift card image was uploaded — check the admin panel to review it.' if purchase.payment_method == 'gift_card' else 'User is awaiting your bank account details.'}
 
-Admin panel: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '*' else 'your-domain.com'}/manage/
+Admin panel: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '*' else 'www.celebrity-management.com'}/manage/
 """
     _send(subject, body)
 
@@ -93,7 +93,7 @@ Anonymous:   {'Yes' if donation.is_anonymous else 'No'}
 
 {'A gift card image was uploaded — check the admin panel to review it.' if donation.payment_method == 'gift_card' else 'User is awaiting your bank account details.'}
 
-Admin panel: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '*' else 'your-domain.com'}/manage/
+Admin panel: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '*' else 'www.celebrity-management.com'}/manage/
 """
     _send(subject, body)
 
@@ -128,7 +128,7 @@ Status:      {registration.payment_status.upper()}
 
 {'Automatically approved (free event).' if event.is_free else ('A gift card image was uploaded — check the admin panel to review it.' if registration.payment_method == 'gift_card' else 'User is awaiting your bank account details.')}
 
-Admin panel: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '*' else 'your-domain.com'}/manage/
+Admin panel: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != '*' else 'www.celebrity-management.com'}/manage/
 """
     _send(subject, body)
 
