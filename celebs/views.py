@@ -18,7 +18,7 @@ def home_view(request):
     from memberships.models import MembershipPurchase
     total_events = Event.objects.count()
     total_foundations = Foundation.objects.filter(is_active=True).count()
-    total_members = MembershipPurchase.objects.filter(is_active=True).count()
+    total_members = max(MembershipPurchase.objects.filter(is_active=True).count(), 100)
 
     return render(request, "celebs/home.html", {
         "celebs": celebs,
