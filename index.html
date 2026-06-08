@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>StarHub — Celebrity Fan Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat", "sans-serif"] } } } }</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    body { background: #0a0a14; }
+    .gradient-text { background: linear-gradient(135deg, #a78bfa, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(139,92,246,0.25); }
+    .hero-bg { background: radial-gradient(ellipse at top, #1e0a3c 0%, #0a0a14 60%); }
+    .celeb-card::before { content:''; position:absolute; inset:0; border-radius:1rem; background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.95) 100%); z-index:1; }
+    .badge-gray   { background:#374151; color:#d1d5db; }
+    .badge-blue   { background:#1d4ed8; color:#bfdbfe; }
+    .badge-gold   { background:#92400e; color:#fde68a; }
+    .badge-platinum { background:linear-gradient(135deg,#6b7280,#d1d5db); color:#111; }
+  </style>
+</head>
+<body class="font-sans text-white min-h-screen">
+  <!-- Page Transition Overlay -->
+  <div id="page-transition" style="position:fixed;inset:0;background:#0a0a14;z-index:9999;pointer-events:none;"></div>
+
+  <!-- NAVBAR -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/index.html" class="text-2xl font-black gradient-text tracking-tight">★ StarHub</a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/index.html" class="text-violet-400 text-sm font-medium">Celebrities</a>
+        <a href="/events.html" class="text-gray-400 hover:text-white text-sm transition">Events</a>
+        <a href="/donate.html" class="text-gray-400 hover:text-white text-sm transition">Donate</a>
+      </div>
+      <div id="nav-auth" class="flex items-center"></div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero-bg pt-32 pb-20 px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <div class="inline-block bg-violet-600/20 border border-violet-500/30 text-violet-300 text-xs font-semibold px-4 py-2 rounded-full mb-6 tracking-widest uppercase">Fan Platform</div>
+      <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6">
+        Connect With Your<br/><span class="gradient-text">Favorite Stars</span>
+      </h1>
+      <p class="text-gray-400 text-lg max-w-xl mx-auto mb-10">Exclusive memberships, charitable causes, and live events — all in one place.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#celebs" class="bg-violet-600 hover:bg-violet-500 text-white font-bold px-8 py-4 rounded-full transition-all shadow-lg shadow-violet-900/40">Explore Celebrities</a>
+        <a href="/register.html" class="bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-full border border-white/10 transition-all">Join For Free</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <div class="bg-white/5 border-y border-white/5 py-6">
+    <div class="max-w-5xl mx-auto px-6 grid grid-cols-3 md:grid-cols-3 gap-4 text-center">
+      <div><div class="text-3xl font-black gradient-text" id="stat-celebs">—</div><div class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Celebrities</div></div>
+      <div><div class="text-3xl font-black gradient-text" id="stat-events">—</div><div class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Upcoming Events</div></div>
+      <div><div class="text-3xl font-black gradient-text" id="stat-foundations">—</div><div class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Foundations</div></div>
+    </div>
+  </div>
+
+  <!-- SEARCH + FILTER -->
+  <section id="celebs" class="max-w-7xl mx-auto px-6 pt-16 pb-4">
+    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-10">
+      <div>
+        <h2 class="text-3xl font-black">Our <span class="gradient-text">Celebrities</span></h2>
+        <p class="text-gray-500 text-sm mt-1">Browse and support the stars you love</p>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <input id="search-input" type="text" placeholder="Search celebrity…" class="bg-white/5 border border-white/10 rounded-full px-5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 w-56 transition" />
+        <select id="cat-filter" class="bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-violet-500 transition">
+          <option value="">All Categories</option>
+          <option value="music">Music</option>
+          <option value="sports">Sports</option>
+          <option value="acting">Acting</option>
+          <option value="comedy">Comedy</option>
+          <option value="politics">Politics</option>
+          <option value="business">Business</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- CELEBRITIES GRID -->
+  <section class="max-w-7xl mx-auto px-6 pb-24">
+    <div id="celebs-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Skeleton loaders -->
+      <div class="animate-pulse bg-white/5 rounded-2xl h-80"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-80"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-80"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-80"></div>
+    </div>
+    <div id="no-celebs" class="hidden text-center py-20 text-gray-500">No celebrities found.</div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 py-10 text-center text-gray-600 text-sm">
+    <p class="font-black text-white text-xl mb-2">★ StarHub</p>
+    <p>© 2026 StarHub Celebrity Platform. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let allCelebs = [];
+
+    async function loadStats() {
+      try {
+        const [celebsData, eventsData, foundationsData] = await Promise.all([
+          CelebsAPI.list(),
+          EventsAPI.list("", "upcoming"),
+          DonationsAPI.foundations(),
+        ]);
+        document.getElementById("stat-celebs").textContent = celebsData.results?.length ?? celebsData.length ?? "—";
+        document.getElementById("stat-events").textContent = eventsData.results?.length ?? eventsData.length ?? "—";
+        document.getElementById("stat-foundations").textContent = foundationsData.results?.length ?? foundationsData.length ?? "—";
+      } catch(e) {}
+    }
+
+    function categoryBadge(cat) {
+      const colors = {
+        music: "bg-pink-900/60 text-pink-300",
+        sports: "bg-green-900/60 text-green-300",
+        acting: "bg-blue-900/60 text-blue-300",
+        comedy: "bg-yellow-900/60 text-yellow-300",
+        politics: "bg-red-900/60 text-red-300",
+        business: "bg-violet-900/60 text-violet-300",
+        other: "bg-gray-800 text-gray-400",
+      };
+      return colors[cat] || colors.other;
+    }
+
+    function renderCelebs(celebs) {
+      const grid = document.getElementById("celebs-grid");
+      const empty = document.getElementById("no-celebs");
+      if (!celebs.length) {
+        grid.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+      grid.innerHTML = celebs.map(c => `
+        <a href="/celebrity.html?slug=${c.slug}" class="relative block rounded-2xl overflow-hidden bg-gray-900 celeb-card card-hover cursor-pointer group h-80">
+          <img src="${mediaURL(c.photo)}" alt="${c.name}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          ${c.is_featured ? '<div class="absolute top-3 right-3 z-10 bg-amber-500 text-black text-xs font-black px-2.5 py-1 rounded-full">★ FEATURED</div>' : ''}
+          <div class="absolute bottom-0 left-0 right-0 z-[2] p-5">
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${categoryBadge(c.category)} capitalize mb-2 inline-block">${c.category}</span>
+            <h3 class="text-lg font-black leading-tight">${c.name}</h3>
+            ${c.nationality ? `<p class="text-gray-400 text-xs mt-1">${c.nationality}</p>` : ""}
+          </div>
+        </a>
+      `).join("");
+    }
+
+    function filterCelebs() {
+      const search = document.getElementById("search-input").value.toLowerCase();
+      const cat = document.getElementById("cat-filter").value;
+      const filtered = allCelebs.filter(c => {
+        const matchSearch = !search || c.name.toLowerCase().includes(search) || (c.nationality || "").toLowerCase().includes(search);
+        const matchCat = !cat || c.category === cat;
+        return matchSearch && matchCat;
+      });
+      renderCelebs(filtered);
+    }
+
+    async function init() {
+      updateNavAuth();
+      loadStats();
+      try {
+        const data = await CelebsAPI.list();
+        allCelebs = data.results || data;
+        renderCelebs(allCelebs);
+      } catch(e) {
+        document.getElementById("celebs-grid").innerHTML = `<div class="col-span-4 text-center py-10 text-red-400">Failed to load celebrities. Is the backend running?</div>`;
+      }
+      document.getElementById("search-input").addEventListener("input", filterCelebs);
+      document.getElementById("cat-filter").addEventListener("change", filterCelebs);
+    }
+
+    init();
+  </script>
+
+  <script>
+    // === GSAP Animations ===
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Fade page in
+    gsap.to("#page-transition", {
+      opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.05,
+      onComplete() { const el = document.getElementById("page-transition"); if (el) el.style.display = "none"; }
+    });
+
+    // 2. Hero entrance
+    gsap.timeline({ delay: 0.15 })
+      .from(".hero-bg .inline-block", { opacity: 0, y: 20, duration: 0.6, ease: "power3.out" })
+      .from(".hero-bg h1", { opacity: 0, y: 30, duration: 0.7, ease: "power3.out" }, "-=0.35")
+      .from(".hero-bg p", { opacity: 0, y: 20, duration: 0.6, ease: "power3.out" }, "-=0.4")
+      .from(".hero-bg .flex a", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out", stagger: 0.1 }, "-=0.35");
+
+    // 3. Animated stat counters
+    function animateCounter(el) {
+      const target = parseInt(el.textContent, 10);
+      if (isNaN(target)) return;
+      const obj = { val: 0 };
+      gsap.to(obj, { val: target, duration: 1.5, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(obj.val); } });
+    }
+    ["stat-celebs", "stat-events", "stat-foundations"].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new MutationObserver(() => { if (el.textContent !== "\u2014") { animateCounter(el); obs.disconnect(); } });
+      obs.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+
+    // 4. Section header scroll reveal
+    gsap.from("#celebs h2, #celebs .text-gray-500", {
+      opacity: 0, y: 25, duration: 0.6, ease: "power3.out", stagger: 0.1,
+      scrollTrigger: { trigger: "#celebs", start: "top 85%" }
+    });
+
+    // 5. Celebrity cards — animate when grid is populated
+    const celebGrid = document.getElementById("celebs-grid");
+    if (celebGrid) {
+      new MutationObserver(() => {
+        const cards = celebGrid.querySelectorAll("a:not(.gsap-done)");
+        if (cards.length) {
+          cards.forEach(c => c.classList.add("gsap-done"));
+          gsap.from(cards, { opacity: 0, y: 40, duration: 0.55, ease: "power3.out", stagger: 0.07 });
+          ScrollTrigger.refresh();
+        }
+      }).observe(celebGrid, { childList: true });
+    }
+
+    // 6. Footer reveal
+    gsap.from("footer p", {
+      opacity: 0, y: 20, duration: 0.6, ease: "power3.out", stagger: 0.1,
+      scrollTrigger: { trigger: "footer", start: "top 95%" }
+    });
+
+    // 7. Page-out transition on internal link clicks
+    function _pageOut(dest) {
+      const o = document.getElementById("page-transition");
+      if (!o) { window.location.href = dest; return; }
+      o.style.display = "block";
+      gsap.fromTo(o, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.in", onComplete: () => { window.location.href = dest; } });
+    }
+    document.addEventListener("click", e => {
+      const link = e.target.closest("a[href]");
+      if (!link) return;
+      try {
+        const u = new URL(link.href);
+        if (u.hostname === location.hostname && !link.href.startsWith("#") && link.target !== "_blank") {
+          e.preventDefault(); _pageOut(link.href);
+        }
+      } catch (_) {}
+    });
+  </script>
+</body>
+</html>

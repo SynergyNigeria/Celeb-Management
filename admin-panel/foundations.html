@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>Foundations — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <style>body{background:#07070f;} .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;} .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;transition:all .2s;color:#9ca3af;} .sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,0.15);color:#a78bfa;}</style>
+</head>
+<body class="font-sans text-white min-h-screen flex">
+  <aside class="w-60 min-h-screen bg-black/60 border-r border-white/5 flex flex-col p-5 fixed top-0 left-0 z-40">
+    <a href="/index.html" class="text-xl font-black gradient-text mb-8">★ StarHub</a>
+    <nav class="space-y-1 flex-1">
+      <a href="/admin-panel/index.html" class="sidebar-link">📊 Dashboard</a>
+      <a href="/admin-panel/celebrities.html" class="sidebar-link">🌟 Celebrities</a>
+      <a href="/admin-panel/events.html" class="sidebar-link">🎟 Events</a>
+      <a href="/admin-panel/memberships.html" class="sidebar-link">🎖 Memberships</a>
+      <a href="/admin-panel/foundations.html" class="sidebar-link active">❤️ Foundations</a>
+      <a href="/admin-panel/users.html" class="sidebar-link">👥 Users</a>
+    </nav>
+    <div class="border-t border-white/5 pt-4 mt-4 space-y-2">
+      <a href="http://127.0.0.1:8000/admin/" target="_blank" class="sidebar-link text-amber-400">⚙️ Django Admin</a>
+      <button onclick="AuthAPI.logout()" class="sidebar-link w-full text-left text-red-400">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <div class="ml-60 flex-1 p-8">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-black">❤️ <span class="gradient-text">Foundations</span></h1>
+        <p class="text-gray-500 text-sm mt-1">Track charitable causes and donation progress</p>
+      </div>
+      <a href="http://127.0.0.1:8000/admin/donations/foundation/add/" target="_blank" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-full text-sm transition">+ Add Foundation</a>
+    </div>
+
+    <div class="mb-5">
+      <select id="celeb-filter" class="bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-violet-500"><option value="">All Celebrities</option></select>
+    </div>
+
+    <div id="foundations-grid" class="grid md:grid-cols-2 gap-6">
+      <div class="animate-pulse bg-white/5 rounded-2xl h-56"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-56"></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!Auth.isLoggedIn()) window.location.href = "/login.html";
+
+    async function loadFoundations(slug) {
+      try {
+        const d = await DonationsAPI.foundations(slug);
+        const list = d.results || d;
+        const grid = document.getElementById("foundations-grid");
+        if (!list.length) { grid.innerHTML = '<p class="col-span-2 text-gray-500 text-center py-8">No foundations found.</p>'; return; }
+        grid.innerHTML = list.map(f => `
+          <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+            <img src="${mediaURL(f.cover_image)}" class="w-full h-36 object-cover" />
+            <div class="p-5">
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <p class="text-xs text-violet-400 font-semibold">${f.celebrity_name}</p>
+                  <h3 class="font-bold text-base">${f.name}</h3>
+                </div>
+                ${f.is_active ? '<span class="text-xs bg-green-900/60 text-green-300 px-2 py-0.5 rounded-full flex-shrink-0">Active</span>' : '<span class="text-xs bg-red-900/60 text-red-300 px-2 py-0.5 rounded-full flex-shrink-0">Inactive</span>'}
+              </div>
+              <p class="text-gray-400 text-xs mb-3 line-clamp-2">${f.description}</p>
+              <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <span>${formatMoney(f.amount_raised)} raised</span>
+                <span>Goal: ${formatMoney(f.target_amount)} (${f.progress_pct}%)</span>
+              </div>
+              <div class="w-full bg-white/10 rounded-full h-2 mb-4">
+                <div class="bg-amber-500 h-2 rounded-full" style="width:${Math.min(f.progress_pct,100)}%"></div>
+              </div>
+              <a href="http://127.0.0.1:8000/admin/donations/foundation/" target="_blank" class="block text-center text-xs bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-lg transition">Edit in Admin</a>
+            </div>
+          </div>`).join("");
+      } catch(e) {}
+    }
+
+    async function init() {
+      try {
+        const c = await CelebsAPI.list();
+        (c.results||c).forEach(cel => { const o = document.createElement("option"); o.value=cel.slug; o.textContent=cel.name; document.getElementById("celeb-filter").appendChild(o); });
+      } catch(e) {}
+      loadFoundations();
+      document.getElementById("celeb-filter").addEventListener("change", e => loadFoundations(e.target.value||null));
+    }
+    init();
+  </script>
+</body>
+</html>

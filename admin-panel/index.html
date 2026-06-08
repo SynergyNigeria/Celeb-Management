@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>Admin — StarHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <style>
+    body{background:#07070f;}
+    .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;transition:all .2s;color:#9ca3af;}
+    .sidebar-link:hover{background:rgba(139,92,246,0.15);color:#a78bfa;}
+    .sidebar-link.active{background:rgba(139,92,246,0.2);color:#a78bfa;}
+  </style>
+</head>
+<body class="font-sans text-white min-h-screen flex">
+
+  <!-- SIDEBAR -->
+  <aside class="w-60 min-h-screen bg-black/60 border-r border-white/5 flex flex-col p-5 fixed top-0 left-0 z-40">
+    <a href="/index.html" class="text-xl font-black gradient-text mb-8">★ StarHub</a>
+    <div class="text-xs text-gray-600 uppercase tracking-widest mb-3 px-2">Admin Panel</div>
+    <nav class="space-y-1 flex-1">
+      <a href="/admin-panel/index.html" class="sidebar-link active">📊 Dashboard</a>
+      <a href="/admin-panel/celebrities.html" class="sidebar-link">🌟 Celebrities</a>
+      <a href="/admin-panel/events.html" class="sidebar-link">🎟 Events</a>
+      <a href="/admin-panel/memberships.html" class="sidebar-link">🎖 Memberships</a>
+      <a href="/admin-panel/foundations.html" class="sidebar-link">❤️ Foundations</a>
+      <a href="/admin-panel/users.html" class="sidebar-link">👥 Users</a>
+    </nav>
+    <div class="border-t border-white/5 pt-4 mt-4 space-y-2">
+      <a href="http://127.0.0.1:8000/admin/" target="_blank" class="sidebar-link text-amber-400 hover:text-amber-300">⚙️ Django Admin</a>
+      <a href="/index.html" class="sidebar-link">🏠 View Site</a>
+      <button onclick="AuthAPI.logout()" class="sidebar-link w-full text-left text-red-400 hover:text-red-300">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="ml-60 flex-1 p-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-black">Dashboard <span class="gradient-text">Overview</span></h1>
+      <p id="admin-greeting" class="text-gray-400 text-sm mt-1">Welcome back!</p>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+      <div class="bg-white/5 border border-white/8 rounded-2xl p-6">
+        <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Celebrities</p>
+        <p class="text-4xl font-black text-violet-300" id="stat-celebs">—</p>
+        <a href="/admin-panel/celebrities.html" class="text-xs text-violet-500 hover:text-violet-300 mt-2 block transition">Manage →</a>
+      </div>
+      <div class="bg-white/5 border border-white/8 rounded-2xl p-6">
+        <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Events</p>
+        <p class="text-4xl font-black text-amber-300" id="stat-events">—</p>
+        <a href="/admin-panel/events.html" class="text-xs text-amber-500 hover:text-amber-300 mt-2 block transition">Manage →</a>
+      </div>
+      <div class="bg-white/5 border border-white/8 rounded-2xl p-6">
+        <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Foundations</p>
+        <p class="text-4xl font-black text-pink-300" id="stat-foundations">—</p>
+        <a href="/admin-panel/foundations.html" class="text-xs text-pink-500 hover:text-pink-300 mt-2 block transition">Manage →</a>
+      </div>
+      <div class="bg-white/5 border border-white/8 rounded-2xl p-6">
+        <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Membership Tiers</p>
+        <p class="text-4xl font-black text-green-300" id="stat-tiers">—</p>
+        <a href="/admin-panel/memberships.html" class="text-xs text-green-500 hover:text-green-300 mt-2 block transition">Manage →</a>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="mb-10">
+      <h2 class="text-lg font-bold mb-4 text-gray-300">Quick Actions</h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        <a href="http://127.0.0.1:8000/admin/celebs/celebrity/add/" target="_blank" class="bg-violet-900/30 border border-violet-700/30 hover:border-violet-500 rounded-2xl p-5 transition group">
+          <div class="text-3xl mb-2">🌟</div>
+          <h3 class="font-bold group-hover:text-violet-300 transition">Add Celebrity</h3>
+          <p class="text-xs text-gray-500 mt-1">Add a new celebrity profile</p>
+        </a>
+        <a href="http://127.0.0.1:8000/admin/events/event/add/" target="_blank" class="bg-amber-900/20 border border-amber-700/30 hover:border-amber-500 rounded-2xl p-5 transition group">
+          <div class="text-3xl mb-2">🎟</div>
+          <h3 class="font-bold group-hover:text-amber-300 transition">Add Event</h3>
+          <p class="text-xs text-gray-500 mt-1">Create a new celebrity event</p>
+        </a>
+        <a href="http://127.0.0.1:8000/admin/memberships/membershiptier/add/" target="_blank" class="bg-green-900/20 border border-green-700/30 hover:border-green-500 rounded-2xl p-5 transition group">
+          <div class="text-3xl mb-2">🎖</div>
+          <h3 class="font-bold group-hover:text-green-300 transition">Add Membership Tier</h3>
+          <p class="text-xs text-gray-500 mt-1">Create membership packages</p>
+        </a>
+        <a href="http://127.0.0.1:8000/admin/donations/foundation/add/" target="_blank" class="bg-pink-900/20 border border-pink-700/30 hover:border-pink-500 rounded-2xl p-5 transition group">
+          <div class="text-3xl mb-2">❤️</div>
+          <h3 class="font-bold group-hover:text-pink-300 transition">Add Foundation</h3>
+          <p class="text-xs text-gray-500 mt-1">Create a charitable cause</p>
+        </a>
+        <a href="http://127.0.0.1:8000/admin/users/user/" target="_blank" class="bg-blue-900/20 border border-blue-700/30 hover:border-blue-500 rounded-2xl p-5 transition group">
+          <div class="text-3xl mb-2">👥</div>
+          <h3 class="font-bold group-hover:text-blue-300 transition">Manage Users</h3>
+          <p class="text-xs text-gray-500 mt-1">View and manage fan accounts</p>
+        </a>
+        <a href="http://127.0.0.1:8000/admin/" target="_blank" class="bg-white/5 border border-white/10 hover:border-white/20 rounded-2xl p-5 transition group">
+          <div class="text-3xl mb-2">⚙️</div>
+          <h3 class="font-bold group-hover:text-white transition">Full Admin</h3>
+          <p class="text-xs text-gray-500 mt-1">Open Django admin panel</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent celebrities -->
+    <div>
+      <h2 class="text-lg font-bold mb-4 text-gray-300">All Celebrities</h2>
+      <div class="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-white/8 text-gray-500 text-xs uppercase tracking-widest">
+              <th class="text-left px-6 py-4">Celebrity</th>
+              <th class="text-left px-6 py-4">Category</th>
+              <th class="text-left px-6 py-4">Nationality</th>
+              <th class="text-left px-6 py-4">Featured</th>
+              <th class="text-left px-6 py-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="celebs-table">
+            <tr><td colspan="5" class="px-6 py-8 text-center text-gray-600 text-xs">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!Auth.isLoggedIn()) { window.location.href = "/login.html"; }
+
+    async function init() {
+      const user = Auth.getUser();
+      document.getElementById("admin-greeting").textContent = `Welcome back, ${user?.name || "Admin"}`;
+
+      try {
+        const [celebs, events, foundations, tiers] = await Promise.all([
+          CelebsAPI.list(),
+          EventsAPI.list(),
+          DonationsAPI.foundations(),
+          MembershipsAPI.tiers(),
+        ]);
+
+        const celebList = celebs.results || celebs;
+        const eventList = events.results || events;
+        const fndList = foundations.results || foundations;
+        const tierList = tiers.results || tiers;
+
+        document.getElementById("stat-celebs").textContent = celebList.length;
+        document.getElementById("stat-events").textContent = eventList.length;
+        document.getElementById("stat-foundations").textContent = fndList.length;
+        document.getElementById("stat-tiers").textContent = tierList.length;
+
+        document.getElementById("celebs-table").innerHTML = celebList.length
+          ? celebList.map(c => `
+            <tr class="border-b border-white/5 hover:bg-white/3 transition">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <img src="${mediaURL(c.photo)}" class="w-9 h-9 rounded-lg object-cover" />
+                  <a href="/celebrity.html?slug=${c.slug}" class="font-semibold hover:text-violet-300 transition">${c.name}</a>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-gray-400 capitalize">${c.category}</td>
+              <td class="px-6 py-4 text-gray-400">${c.nationality || "—"}</td>
+              <td class="px-6 py-4">${c.is_featured ? '<span class="text-amber-400 text-xs font-bold">★ Featured</span>' : '<span class="text-gray-600 text-xs">—</span>'}</td>
+              <td class="px-6 py-4">
+                <div class="flex gap-2">
+                  <a href="/celebrity.html?slug=${c.slug}" class="text-xs text-violet-400 hover:text-violet-300 transition">View</a>
+                  <a href="http://127.0.0.1:8000/admin/celebs/celebrity/" target="_blank" class="text-xs text-amber-400 hover:text-amber-300 transition">Edit</a>
+                </div>
+              </td>
+            </tr>`).join("")
+          : '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No celebrities yet.</td></tr>';
+
+      } catch(e) {
+        document.getElementById("stat-celebs").textContent = "ERR";
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

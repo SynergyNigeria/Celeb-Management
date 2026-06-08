@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>Membership — StarHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    body{background:#0a0a14;}
+    .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .card-glow:hover{box-shadow:0 0 40px rgba(139,92,246,0.3);}
+  </style>
+</head>
+<body class="font-sans text-white min-h-screen">
+  <!-- Page Transition Overlay -->
+  <div id="page-transition" style="position:fixed;inset:0;background:#0a0a14;z-index:9999;pointer-events:none;"></div>
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/index.html" class="text-2xl font-black gradient-text">★ StarHub</a>
+      <div id="nav-auth" class="flex items-center"></div>
+    </div>
+  </nav>
+
+  <main class="pt-28 pb-24 max-w-6xl mx-auto px-6">
+    <!-- Breadcrumb -->
+    <div class="text-sm text-gray-500 mb-8">
+      <a href="/index.html" class="hover:text-violet-400 transition">Home</a>
+      <span class="mx-2">›</span>
+      <a id="bc-celeb" href="#" class="hover:text-violet-400 transition">Celebrity</a>
+      <span class="mx-2">›</span>
+      <span class="text-gray-300">Membership</span>
+    </div>
+
+    <div class="text-center mb-12">
+      <img id="celeb-photo" src="" class="w-20 h-20 rounded-2xl object-cover mx-auto mb-4 shadow-xl" />
+      <h1 class="text-4xl font-black"><span id="celeb-name"></span> <span class="gradient-text">Membership</span></h1>
+      <p class="text-gray-400 mt-2">Choose a plan that fits your fandom level</p>
+    </div>
+
+    <div id="tiers-grid" class="grid md:grid-cols-3 gap-8">
+      <div class="animate-pulse bg-white/5 rounded-2xl h-80"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-80"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-80"></div>
+    </div>
+    <div id="no-tiers" class="hidden text-center py-16 text-gray-500">No membership tiers available for this celebrity yet.</div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const slug = getParam("slug");
+    if (!slug) window.location.href = "/index.html";
+
+    const badgeClass = {gray:"bg-gray-700 text-gray-200", blue:"bg-blue-800 text-blue-200", gold:"bg-amber-700 text-amber-100", platinum:"bg-gradient-to-r from-gray-300 to-gray-100 text-gray-900"};
+    const featuredTier = { gray:false, blue:false, gold:true, platinum:false };
+
+    async function buyMembership(tierId, btn) {
+      if (!requireAuth()) return;
+      setLoading(btn, true, "Join Now");
+      try {
+        await MembershipsAPI.purchase(tierId);
+        showToast("Welcome to the club! Membership activated 🎉");
+        btn.textContent = "Active ✓";
+        btn.classList.add("bg-green-700"); btn.classList.remove("bg-violet-600");
+        btn.disabled = true;
+      } catch(e) {
+        showToast(e.detail || "Membership unavailable.", "error");
+        setLoading(btn, false, "Join Now");
+      }
+    }
+
+    async function init() {
+      updateNavAuth();
+      try {
+        const [celebData, tiers] = await Promise.all([CelebsAPI.detail(slug), MembershipsAPI.tiers(slug)]);
+        document.title = `${celebData.name} Membership — StarHub`;
+        document.getElementById("celeb-name").textContent = celebData.name;
+        document.getElementById("celeb-photo").src = mediaURL(celebData.photo);
+        document.getElementById("bc-celeb").textContent = celebData.name;
+        document.getElementById("bc-celeb").href = `/celebrity.html?slug=${slug}`;
+
+        const list = tiers.results || tiers;
+        const grid = document.getElementById("tiers-grid");
+        if (!list.length) { grid.innerHTML = ""; document.getElementById("no-tiers").classList.remove("hidden"); return; }
+
+        grid.innerHTML = list.map((t, i) => {
+          const isPopular = i === Math.floor(list.length / 2);
+          return `
+          <div class="relative bg-white/5 border ${isPopular ? "border-violet-500" : "border-white/10"} rounded-2xl p-7 flex flex-col gap-5 card-glow transition">
+            ${isPopular ? '<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-600 text-white text-xs font-black px-4 py-1 rounded-full">MOST POPULAR</div>' : ""}
+            <div>
+              <span class="text-xs font-bold px-3 py-1 rounded-full ${badgeClass[t.badge_color] || badgeClass.gray}">${t.name}</span>
+              <p class="text-4xl font-black mt-4 text-violet-300">${formatMoney(t.price)}</p>
+              <p class="text-xs text-gray-500 mt-1">${t.duration_days}-day membership</p>
+            </div>
+            <p class="text-gray-300 text-sm flex-1">${t.description}</p>
+            <ul class="space-y-2">
+              ${(t.benefits || []).map(b => `<li class="flex gap-2 text-sm text-gray-300"><span class="text-violet-400 font-bold">✓</span>${b}</li>`).join("")}
+            </ul>
+            <button id="btn-${t.id}" onclick="buyMembership(${t.id}, this)" class="bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 rounded-xl text-sm transition">Join Now</button>
+          </div>`;
+        }).join("");
+      } catch(e) {
+        document.getElementById("tiers-grid").innerHTML = `<p class="col-span-3 text-red-400 text-center">Failed to load memberships.</p>`;
+      }
+    }
+    init();
+  </script>
+
+  <script>
+    // === GSAP Animations ===
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Fade page in
+    gsap.to("#page-transition", {
+      opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.05,
+      onComplete() { const el = document.getElementById("page-transition"); if (el) el.style.display = "none"; }
+    });
+
+    // 2. Header entrance
+    gsap.timeline({ delay: 0.1 })
+      .from("main .text-center img", { opacity: 0, scale: 0.8, duration: 0.6, ease: "back.out(1.4)" })
+      .from("main .text-center h1", { opacity: 0, y: 20, duration: 0.6, ease: "power3.out" }, "-=0.3")
+      .from("main .text-center p", { opacity: 0, y: 15, duration: 0.5, ease: "power3.out" }, "-=0.3");
+
+    // 3. Tier cards — animate when dynamically populated
+    const tiersGrid = document.getElementById("tiers-grid");
+    if (tiersGrid) {
+      new MutationObserver(() => {
+        const cards = tiersGrid.querySelectorAll(":scope > *:not(.gsap-done)");
+        if (cards.length && !cards[0].classList.contains("animate-pulse")) {
+          cards.forEach(c => c.classList.add("gsap-done"));
+          gsap.from(cards, {
+            opacity: 0, y: 40, duration: 0.55, ease: "power3.out", stagger: 0.12,
+            scrollTrigger: { trigger: tiersGrid, start: "top 80%" }
+          });
+        }
+      }).observe(tiersGrid, { childList: true });
+    }
+
+    // 4. Page-out transition on internal link clicks
+    function _pageOut(dest) {
+      const o = document.getElementById("page-transition");
+      if (!o) { window.location.href = dest; return; }
+      o.style.display = "block";
+      gsap.fromTo(o, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.in", onComplete: () => { window.location.href = dest; } });
+    }
+    document.addEventListener("click", e => {
+      const link = e.target.closest("a[href]");
+      if (!link) return;
+      try {
+        const u = new URL(link.href);
+        if (u.hostname === location.hostname && !link.href.startsWith("#") && link.target !== "_blank") {
+          e.preventDefault(); _pageOut(link.href);
+        }
+      } catch (_) {}
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>Events — StarHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>body{background:#0a0a14;} .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}</style>
+</head>
+<body class="font-sans text-white min-h-screen">
+  <!-- Page Transition Overlay -->
+  <div id="page-transition" style="position:fixed;inset:0;background:#0a0a14;z-index:9999;pointer-events:none;"></div>
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/index.html" class="text-2xl font-black gradient-text">★ StarHub</a>
+      <div id="nav-auth" class="flex items-center"></div>
+    </div>
+  </nav>
+
+  <main class="pt-28 pb-24 max-w-6xl mx-auto px-6">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4">
+      <div>
+        <h1 class="text-4xl font-black"><span id="page-title">All</span> <span class="gradient-text">Events</span></h1>
+        <p class="text-gray-500 text-sm mt-1" id="page-sub">Discover concerts, meet & greets, charity events and more</p>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <select id="status-filter" class="bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-violet-500">
+          <option value="">All Status</option>
+          <option value="upcoming" selected>Upcoming</option>
+          <option value="ongoing">Ongoing</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select id="celeb-filter" class="bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-violet-500">
+          <option value="">All Celebrities</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="events-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="animate-pulse bg-white/5 rounded-2xl h-72"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-72"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-72"></div>
+    </div>
+    <div id="no-events" class="hidden text-center py-20 text-gray-500">No events found.</div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const initCelebSlug = getParam("celeb");
+
+    const statusColors = { upcoming:"bg-violet-900/60 text-violet-300", ongoing:"bg-green-900/60 text-green-300", completed:"bg-gray-700 text-gray-400", cancelled:"bg-red-900/60 text-red-300" };
+    const typeColors = { concert:"bg-pink-900/60 text-pink-300", meetgreet:"bg-blue-900/60 text-blue-200", charity:"bg-amber-900/60 text-amber-300", premiere:"bg-purple-900/60 text-purple-200", sports:"bg-green-900/60 text-green-300", workshop:"bg-indigo-900/60 text-indigo-200", virtual:"bg-teal-900/60 text-teal-300", other:"bg-gray-700 text-gray-400" };
+
+    function renderEvents(events) {
+      const grid = document.getElementById("events-grid");
+      const empty = document.getElementById("no-events");
+      if (!events.length) { grid.innerHTML = ""; empty.classList.remove("hidden"); return; }
+      empty.classList.add("hidden");
+      grid.innerHTML = events.map(ev => `
+        <a href="/event-detail.html?celeb=${ev.celebrity_slug}&slug=${ev.slug}" class="group block bg-white/5 border border-white/10 hover:border-violet-500/40 rounded-2xl overflow-hidden transition">
+          <div class="relative h-48 overflow-hidden">
+            <img src="${mediaURL(ev.image)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+            <div class="absolute top-3 left-3 flex gap-2 flex-wrap">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${statusColors[ev.status] || statusColors.other} capitalize">${ev.status}</span>
+              <span class="text-xs px-2.5 py-1 rounded-full ${typeColors[ev.event_type] || typeColors.other} capitalize">${ev.event_type.replace("meetgreet","Meet & Greet")}</span>
+            </div>
+            ${ev.is_free ? '<div class="absolute top-3 right-3 bg-green-500 text-black text-xs font-black px-2.5 py-1 rounded-full">FREE</div>' : ''}
+          </div>
+          <div class="p-5">
+            <p class="text-xs text-violet-400 font-semibold mb-1">${ev.celebrity_name}</p>
+            <h3 class="font-bold text-base leading-snug group-hover:text-violet-300 transition mb-2">${ev.title}</h3>
+            <div class="flex flex-col gap-1 text-xs text-gray-400">
+              <span>📅 ${formatDate(ev.event_date)}</span>
+              <span>📍 ${ev.location}</span>
+              ${!ev.is_free ? `<span class="text-amber-400 font-bold">🎟 ${formatMoney(ev.ticket_price)}</span>` : '<span class="text-green-400 font-semibold">🎟 Free Entry</span>'}
+            </div>
+          </div>
+        </a>
+      `).join("");
+    }
+
+    async function loadEvents() {
+      const celebSlug = document.getElementById("celeb-filter").value || initCelebSlug;
+      const status = document.getElementById("status-filter").value;
+      const grid = document.getElementById("events-grid");
+      grid.innerHTML = '<div class="animate-pulse bg-white/5 rounded-2xl h-72"></div><div class="animate-pulse bg-white/5 rounded-2xl h-72"></div><div class="animate-pulse bg-white/5 rounded-2xl h-72"></div>';
+      try {
+        const data = await EventsAPI.list(celebSlug, status);
+        renderEvents(data.results || data);
+      } catch(e) { grid.innerHTML = '<p class="col-span-3 text-red-400 text-center">Failed to load events.</p>'; }
+    }
+
+    async function init() {
+      updateNavAuth();
+      try {
+        const celebs = await CelebsAPI.list();
+        const list = celebs.results || celebs;
+        const sel = document.getElementById("celeb-filter");
+        list.forEach(c => { const o = document.createElement("option"); o.value=c.slug; o.textContent=c.name; if(c.slug===initCelebSlug) o.selected=true; sel.appendChild(o); });
+        if (initCelebSlug) {
+          const c = list.find(x => x.slug===initCelebSlug);
+          if (c) { document.getElementById("page-title").textContent = c.name; document.getElementById("page-sub").textContent = `All events for ${c.name}`; }
+        }
+      } catch(e) {}
+      loadEvents();
+      document.getElementById("status-filter").addEventListener("change", loadEvents);
+      document.getElementById("celeb-filter").addEventListener("change", loadEvents);
+    }
+    init();
+  </script>
+
+  <script>
+    // === GSAP Animations ===
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Fade page in
+    gsap.to("#page-transition", {
+      opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.05,
+      onComplete() { const el = document.getElementById("page-transition"); if (el) el.style.display = "none"; }
+    });
+
+    // 2. Header entrance
+    gsap.timeline({ delay: 0.1 })
+      .from("main h1", { opacity: 0, y: 25, duration: 0.6, ease: "power3.out" })
+      .from("#page-sub", { opacity: 0, y: 15, duration: 0.5, ease: "power3.out" }, "-=0.3")
+      .from("#status-filter, #celeb-filter", { opacity: 0, y: 15, duration: 0.45, ease: "power3.out", stagger: 0.08 }, "-=0.3");
+
+    // 3. Event cards — animate when dynamically populated
+    const eventsGrid = document.getElementById("events-grid");
+    if (eventsGrid) {
+      new MutationObserver(() => {
+        const cards = eventsGrid.querySelectorAll(":scope > *:not(.gsap-done)");
+        if (cards.length && !cards[0].classList.contains("animate-pulse")) {
+          cards.forEach(c => c.classList.add("gsap-done"));
+          gsap.from(cards, { opacity: 0, y: 35, duration: 0.5, ease: "power3.out", stagger: 0.08 });
+        }
+      }).observe(eventsGrid, { childList: true });
+    }
+
+    // 4. Page-out transition on internal link clicks
+    function _pageOut(dest) {
+      const o = document.getElementById("page-transition");
+      if (!o) { window.location.href = dest; return; }
+      o.style.display = "block";
+      gsap.fromTo(o, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.in", onComplete: () => { window.location.href = dest; } });
+    }
+    document.addEventListener("click", e => {
+      const link = e.target.closest("a[href]");
+      if (!link) return;
+      try {
+        const u = new URL(link.href);
+        if (u.hostname === location.hostname && !link.href.startsWith("#") && link.target !== "_blank") {
+          e.preventDefault(); _pageOut(link.href);
+        }
+      } catch (_) {}
+    });
+  </script>
+</body>
+</html>

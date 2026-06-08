@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>Users — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <style>body{background:#07070f;} .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;} .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;transition:all .2s;color:#9ca3af;} .sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,0.15);color:#a78bfa;}</style>
+</head>
+<body class="font-sans text-white min-h-screen flex">
+  <aside class="w-60 min-h-screen bg-black/60 border-r border-white/5 flex flex-col p-5 fixed top-0 left-0 z-40">
+    <a href="/index.html" class="text-xl font-black gradient-text mb-8">★ StarHub</a>
+    <nav class="space-y-1 flex-1">
+      <a href="/admin-panel/index.html" class="sidebar-link">📊 Dashboard</a>
+      <a href="/admin-panel/celebrities.html" class="sidebar-link">🌟 Celebrities</a>
+      <a href="/admin-panel/events.html" class="sidebar-link">🎟 Events</a>
+      <a href="/admin-panel/memberships.html" class="sidebar-link">🎖 Memberships</a>
+      <a href="/admin-panel/foundations.html" class="sidebar-link">❤️ Foundations</a>
+      <a href="/admin-panel/users.html" class="sidebar-link active">👥 Users</a>
+    </nav>
+    <div class="border-t border-white/5 pt-4 mt-4 space-y-2">
+      <a href="http://127.0.0.1:8000/admin/" target="_blank" class="sidebar-link text-amber-400">⚙️ Django Admin</a>
+      <button onclick="AuthAPI.logout()" class="sidebar-link w-full text-left text-red-400">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <div class="ml-60 flex-1 p-8">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-black">👥 <span class="gradient-text">Fan Users</span></h1>
+        <p class="text-gray-500 text-sm mt-1">User management is handled via Django Admin</p>
+      </div>
+      <a href="http://127.0.0.1:8000/admin/users/user/" target="_blank" class="bg-violet-600 hover:bg-violet-500 text-white font-bold px-6 py-2.5 rounded-full text-sm transition">Open Django Admin →</a>
+    </div>
+
+    <div class="bg-white/5 border border-white/10 rounded-2xl p-8 max-w-lg">
+      <div class="text-5xl mb-4">👥</div>
+      <h2 class="text-xl font-bold mb-2">User Management</h2>
+      <p class="text-gray-400 text-sm mb-6">Fan accounts, roles, and permissions are managed through the Django Admin panel. Click the button below to open it.</p>
+      <div class="space-y-3">
+        <a href="http://127.0.0.1:8000/admin/users/user/" target="_blank" class="flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition group">
+          <div>
+            <p class="font-semibold group-hover:text-violet-300 transition">View All Users</p>
+            <p class="text-xs text-gray-500">Browse and search fan accounts</p>
+          </div>
+          <span class="text-gray-600">→</span>
+        </a>
+        <a href="http://127.0.0.1:8000/admin/users/user/add/" target="_blank" class="flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition group">
+          <div>
+            <p class="font-semibold group-hover:text-violet-300 transition">Add Admin User</p>
+            <p class="text-xs text-gray-500">Create new staff/admin accounts</p>
+          </div>
+          <span class="text-gray-600">→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!Auth.isLoggedIn()) window.location.href = "/login.html";
+  </script>
+</body>
+</html>

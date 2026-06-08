@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>Memberships — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <style>body{background:#07070f;} .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;} .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;transition:all .2s;color:#9ca3af;} .sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,0.15);color:#a78bfa;}</style>
+</head>
+<body class="font-sans text-white min-h-screen flex">
+  <aside class="w-60 min-h-screen bg-black/60 border-r border-white/5 flex flex-col p-5 fixed top-0 left-0 z-40">
+    <a href="/index.html" class="text-xl font-black gradient-text mb-8">★ StarHub</a>
+    <nav class="space-y-1 flex-1">
+      <a href="/admin-panel/index.html" class="sidebar-link">📊 Dashboard</a>
+      <a href="/admin-panel/celebrities.html" class="sidebar-link">🌟 Celebrities</a>
+      <a href="/admin-panel/events.html" class="sidebar-link">🎟 Events</a>
+      <a href="/admin-panel/memberships.html" class="sidebar-link active">🎖 Memberships</a>
+      <a href="/admin-panel/foundations.html" class="sidebar-link">❤️ Foundations</a>
+      <a href="/admin-panel/users.html" class="sidebar-link">👥 Users</a>
+    </nav>
+    <div class="border-t border-white/5 pt-4 mt-4 space-y-2">
+      <a href="http://127.0.0.1:8000/admin/" target="_blank" class="sidebar-link text-amber-400">⚙️ Django Admin</a>
+      <button onclick="AuthAPI.logout()" class="sidebar-link w-full text-left text-red-400">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <div class="ml-60 flex-1 p-8">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-black">🎖 <span class="gradient-text">Membership Tiers</span></h1>
+        <p class="text-gray-500 text-sm mt-1">Manage membership packages per celebrity</p>
+      </div>
+      <a href="http://127.0.0.1:8000/admin/memberships/membershiptier/add/" target="_blank" class="bg-violet-600 hover:bg-violet-500 text-white font-bold px-6 py-2.5 rounded-full text-sm transition">+ Add Tier</a>
+    </div>
+
+    <div class="mb-4 flex gap-3">
+      <select id="celeb-filter" class="bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-violet-500"><option value="">All Celebrities</option></select>
+    </div>
+
+    <div id="tiers-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="animate-pulse bg-white/5 rounded-2xl h-48"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-48"></div>
+      <div class="animate-pulse bg-white/5 rounded-2xl h-48"></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!Auth.isLoggedIn()) window.location.href = "/login.html";
+    const badgeC = {gray:"bg-gray-700 text-gray-300",blue:"bg-blue-800 text-blue-200",gold:"bg-amber-700 text-amber-100",platinum:"bg-gray-200 text-gray-900"};
+
+    async function loadTiers(slug) {
+      try {
+        const d = await MembershipsAPI.tiers(slug);
+        const list = d.results || d;
+        const grid = document.getElementById("tiers-grid");
+        if (!list.length) { grid.innerHTML = '<p class="col-span-3 text-gray-500 text-center py-8">No membership tiers found.</p>'; return; }
+        grid.innerHTML = list.map(t => `
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs px-2.5 py-1 rounded-full font-bold ${badgeC[t.badge_color] || badgeC.gray}">${t.name}</span>
+              <span class="text-xl font-black text-violet-300">${formatMoney(t.price)}</span>
+            </div>
+            <p class="text-xs text-violet-400 font-semibold mb-1">${t.celebrity_name}</p>
+            <p class="text-sm text-gray-400 mb-3">${t.description}</p>
+            <ul class="space-y-1 mb-4">
+              ${(t.benefits||[]).map(b=>`<li class="text-xs text-gray-300 flex gap-1.5"><span class="text-violet-400">✓</span>${b}</li>`).join("")}
+            </ul>
+            <div class="flex justify-between text-xs text-gray-500 mb-3">
+              <span>${t.duration_days} days</span>
+              <span>${t.is_active ? '<span class="text-green-400">Active</span>' : '<span class="text-red-400">Inactive</span>'}</span>
+            </div>
+            <a href="http://127.0.0.1:8000/admin/memberships/membershiptier/" target="_blank" class="block text-center text-xs bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-lg transition">Edit in Admin</a>
+          </div>`).join("");
+      } catch(e) {}
+    }
+
+    async function init() {
+      try {
+        const c = await CelebsAPI.list();
+        (c.results||c).forEach(cel => { const o = document.createElement("option"); o.value=cel.slug; o.textContent=cel.name; document.getElementById("celeb-filter").appendChild(o); });
+      } catch(e) {}
+      loadTiers();
+      document.getElementById("celeb-filter").addEventListener("change", e => loadTiers(e.target.value||null));
+    }
+    init();
+  </script>
+</body>
+</html>

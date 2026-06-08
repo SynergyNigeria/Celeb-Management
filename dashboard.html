@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>My Dashboard — StarHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <style>body{background:#0a0a14;} .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;} .tab-active{border-bottom:2px solid #8b5cf6; color:#a78bfa; font-weight:700;}</style>
+</head>
+<body class="font-sans text-white min-h-screen">
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/index.html" class="text-2xl font-black gradient-text">★ StarHub</a>
+      <div id="nav-auth" class="flex items-center"></div>
+    </div>
+  </nav>
+
+  <main class="pt-28 pb-24 max-w-5xl mx-auto px-6">
+    <!-- Profile header -->
+    <div class="flex items-center gap-5 mb-10">
+      <div class="w-16 h-16 rounded-2xl bg-violet-900/60 border border-violet-700/40 flex items-center justify-center text-2xl font-black text-violet-300" id="avatar-init">?</div>
+      <div>
+        <h1 class="text-2xl font-black" id="user-name">Loading…</h1>
+        <p class="text-gray-400 text-sm" id="user-email"></p>
+        <p class="text-xs text-gray-600" id="user-country"></p>
+      </div>
+      <button onclick="AuthAPI.logout()" class="ml-auto bg-white/5 hover:bg-white/10 border border-white/10 text-sm px-5 py-2 rounded-full transition">Logout</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-white/10 mb-8 gap-6 overflow-x-auto">
+      <button onclick="showTab('memberships')" class="tab-active pb-3 text-sm whitespace-nowrap" id="tab-memberships">Memberships</button>
+      <button onclick="showTab('donations')" class="pb-3 text-sm text-gray-400 whitespace-nowrap transition hover:text-white" id="tab-donations">Donations</button>
+      <button onclick="showTab('events')" class="pb-3 text-sm text-gray-400 whitespace-nowrap transition hover:text-white" id="tab-events">Events</button>
+    </div>
+
+    <div id="pane-memberships">
+      <h2 class="text-lg font-bold mb-4 text-gray-300">Active Memberships</h2>
+      <div id="mem-list" class="space-y-3"></div>
+    </div>
+
+    <div id="pane-donations" class="hidden">
+      <h2 class="text-lg font-bold mb-4 text-gray-300">Donation History</h2>
+      <div id="don-list" class="space-y-3"></div>
+    </div>
+
+    <div id="pane-events" class="hidden">
+      <h2 class="text-lg font-bold mb-4 text-gray-300">My Event Registrations</h2>
+      <div id="ev-list" class="space-y-3"></div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if (!Auth.isLoggedIn()) window.location.href = "/login.html?next=/dashboard.html";
+
+    function showTab(name) {
+      ["memberships","donations","events"].forEach(t => {
+        document.getElementById(`pane-${t}`).classList.add("hidden");
+        const tb = document.getElementById(`tab-${t}`);
+        tb.classList.remove("tab-active"); tb.classList.add("text-gray-400");
+      });
+      document.getElementById(`pane-${name}`).classList.remove("hidden");
+      const tb = document.getElementById(`tab-${name}`);
+      tb.classList.add("tab-active"); tb.classList.remove("text-gray-400");
+    }
+
+    const badgeColors = {gray:"bg-gray-700 text-gray-200",blue:"bg-blue-800 text-blue-200",gold:"bg-amber-800 text-amber-200",platinum:"bg-gray-300 text-gray-900"};
+    const statusColors = {upcoming:"text-violet-300", ongoing:"text-green-300", completed:"text-gray-400", cancelled:"text-red-400"};
+
+    function emptyRow(msg) { return `<p class="text-gray-500 text-sm py-6 text-center">${msg}</p>`; }
+
+    async function init() {
+      updateNavAuth();
+      const user = Auth.getUser();
+      document.getElementById("user-name").textContent = user.name;
+      document.getElementById("user-email").textContent = user.email;
+      document.getElementById("user-country").textContent = user.country;
+      document.getElementById("avatar-init").textContent = user.name[0].toUpperCase();
+
+      try {
+        const [mems, dons, evs] = await Promise.all([
+          MembershipsAPI.mine(),
+          DonationsAPI.mine(),
+          EventsAPI.mine(),
+        ]);
+
+        // Memberships
+        const memList = mems.results || mems;
+        document.getElementById("mem-list").innerHTML = memList.length
+          ? memList.map(m => `
+            <div class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
+              <span class="text-2xl">🎖</span>
+              <div class="flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold">${m.tier.name}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full ${badgeColors[m.tier.badge_color] || badgeColors.gray}">${m.tier.badge_color}</span>
+                  ${m.is_active ? '<span class="text-xs bg-green-900/60 text-green-300 px-2 py-0.5 rounded-full">Active</span>' : '<span class="text-xs bg-red-900/60 text-red-300 px-2 py-0.5 rounded-full">Expired</span>'}
+                </div>
+                <p class="text-xs text-gray-400 mt-0.5">${m.tier.celebrity_name} · Expires ${formatDate(m.expires_at)}</p>
+              </div>
+              <span class="text-violet-300 font-bold">${formatMoney(m.amount_paid)}</span>
+            </div>`).join("")
+          : emptyRow("No memberships yet. <a href='/index.html' class='text-violet-400 hover:underline'>Browse celebrities →</a>");
+
+        // Donations
+        const donList = dons.results || dons;
+        document.getElementById("don-list").innerHTML = donList.length
+          ? donList.map(d => `
+            <div class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
+              <span class="text-2xl">❤️</span>
+              <div class="flex-1">
+                <p class="font-bold">${d.foundation_name}</p>
+                <p class="text-xs text-gray-400 mt-0.5">${formatDate(d.donated_at)}${d.message ? ' · "' + d.message + '"' : ""}</p>
+              </div>
+              <span class="text-amber-400 font-black">${formatMoney(d.amount)}</span>
+            </div>`).join("")
+          : emptyRow("No donations yet. <a href='/donate.html' class='text-amber-400 hover:underline'>Support a cause →</a>");
+
+        // Events
+        const evList = evs.results || evs;
+        document.getElementById("ev-list").innerHTML = evList.length
+          ? evList.map(r => `
+            <div class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
+              <span class="text-2xl">🎟</span>
+              <div class="flex-1">
+                <p class="font-bold">${r.event.title}</p>
+                <p class="text-xs text-gray-400 mt-0.5 ${statusColors[r.event.status] || ""}">${r.event.celebrity_name} · ${formatDate(r.event.event_date)} · <span class="capitalize">${r.event.status}</span></p>
+              </div>
+              <span class="text-violet-300 font-bold">${r.amount_paid > 0 ? formatMoney(r.amount_paid) : "Free"}</span>
+            </div>`).join("")
+          : emptyRow("No event registrations yet. <a href='/events.html' class='text-violet-400 hover:underline'>Browse events →</a>");
+
+      } catch(e) {
+        console.error(e);
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

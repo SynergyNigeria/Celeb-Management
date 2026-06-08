@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="StarHub" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+  <title>Event — StarHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ["Montserrat","sans-serif"] } } } }</script>
+  <style>body{background:#0a0a14;} .gradient-text{background:linear-gradient(135deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}</style>
+</head>
+<body class="font-sans text-white min-h-screen">
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/index.html" class="text-2xl font-black gradient-text">★ StarHub</a>
+      <div id="nav-auth" class="flex items-center"></div>
+    </div>
+  </nav>
+
+  <!-- Loading -->
+  <div id="loading" class="pt-28 max-w-4xl mx-auto px-6">
+    <div class="animate-pulse space-y-4">
+      <div class="bg-white/5 h-80 rounded-2xl"></div>
+      <div class="bg-white/5 h-8 rounded-xl w-2/3"></div>
+      <div class="bg-white/5 h-4 rounded-xl w-1/3"></div>
+    </div>
+  </div>
+
+  <main id="content" class="hidden pt-28 pb-24 max-w-4xl mx-auto px-6">
+    <a id="back-link" href="/events.html" class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-violet-400 transition mb-6">← Back to Events</a>
+
+    <div class="relative rounded-2xl overflow-hidden h-80 mb-8 bg-gray-900">
+      <img id="ev-image" class="w-full h-full object-cover opacity-80" />
+      <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a14] to-transparent"></div>
+      <div id="ev-badges" class="absolute top-4 left-4 flex gap-2"></div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="md:col-span-2">
+        <p id="ev-celeb" class="text-violet-400 text-sm font-semibold mb-2"></p>
+        <h1 id="ev-title" class="text-3xl md:text-4xl font-black leading-tight mb-4"></h1>
+        <p id="ev-desc" class="text-gray-300 leading-relaxed whitespace-pre-line"></p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Info card -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-widest">Date & Time</p>
+            <p id="ev-date" class="font-bold mt-0.5"></p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-widest">Venue</p>
+            <p id="ev-location" class="font-bold mt-0.5"></p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-widest">Ticket</p>
+            <p id="ev-price" class="font-black text-2xl text-violet-300 mt-0.5"></p>
+          </div>
+          <div id="seats-info"></div>
+          <button id="register-btn" onclick="registerEvent()" class="w-full bg-violet-600 hover:bg-violet-500 text-white font-black py-3 rounded-xl transition text-sm">Register Now</button>
+          <p id="register-msg" class="text-xs text-center text-gray-500 hidden"></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const celebSlug = getParam("celeb");
+    const eventSlug = getParam("slug");
+    let eventData = null;
+
+    async function registerEvent() {
+      if (!requireAuth()) return;
+      const btn = document.getElementById("register-btn");
+      setLoading(btn, true, "Register Now");
+      try {
+        await EventsAPI.register(eventData.id);
+        showToast("You're registered! See you there 🎉");
+        btn.textContent = "Registered ✓";
+        btn.classList.replace("bg-violet-600","bg-green-700");
+        btn.disabled = true;
+      } catch(e) {
+        showToast(e.detail || "Registration failed.", "error");
+        setLoading(btn, false, "Register Now");
+      }
+    }
+
+    async function init() {
+      updateNavAuth();
+      if (!celebSlug || !eventSlug) { window.location.href = "/events.html"; return; }
+      try {
+        eventData = await EventsAPI.detail(celebSlug, eventSlug);
+        document.title = `${eventData.title} — StarHub`;
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("content").classList.remove("hidden");
+        document.getElementById("back-link").href = `/events.html?celeb=${celebSlug}`;
+
+        document.getElementById("ev-image").src = mediaURL(eventData.image);
+        document.getElementById("ev-title").textContent = eventData.title;
+        document.getElementById("ev-celeb").textContent = `${eventData.celebrity_name} · ${eventData.event_type.replace("meetgreet","Meet & Greet")}`;
+        document.getElementById("ev-desc").textContent = eventData.description;
+        document.getElementById("ev-location").textContent = [eventData.venue, eventData.city, eventData.country].filter(Boolean).join(", ") || eventData.location;
+        document.getElementById("ev-date").textContent = formatDate(eventData.event_date);
+        document.getElementById("ev-price").textContent = eventData.is_free ? "FREE" : formatMoney(eventData.ticket_price);
+
+        if (eventData.seats_total > 0) {
+          const avail = eventData.seats_available ?? (eventData.seats_total - eventData.seats_booked);
+          document.getElementById("seats-info").innerHTML = `<p class="text-xs text-gray-500">${avail} seats left of ${eventData.seats_total}</p>`;
+          if (avail <= 0) {
+            const btn = document.getElementById("register-btn");
+            btn.textContent = "Sold Out"; btn.disabled = true; btn.classList.replace("bg-violet-600","bg-gray-700");
+          }
+        }
+
+        if (eventData.status === "completed" || eventData.status === "cancelled") {
+          const btn = document.getElementById("register-btn");
+          btn.textContent = eventData.status === "cancelled" ? "Event Cancelled" : "Event Ended";
+          btn.disabled = true; btn.classList.replace("bg-violet-600","bg-gray-700");
+        }
+
+        const statusColors = { upcoming:"bg-violet-900/60 text-violet-300", ongoing:"bg-green-900/60 text-green-300", completed:"bg-gray-700 text-gray-400", cancelled:"bg-red-900/60 text-red-300" };
+        document.getElementById("ev-badges").innerHTML = `
+          <span class="text-xs font-semibold px-3 py-1.5 rounded-full ${statusColors[eventData.status] || ''} capitalize">${eventData.status}</span>
+          ${eventData.is_free ? '<span class="text-xs font-bold px-3 py-1.5 rounded-full bg-green-500 text-black">FREE</span>' : ""}
+        `;
+      } catch(e) {
+        document.getElementById("loading").innerHTML = '<p class="text-red-400 text-center py-20">Event not found.</p>';
+      }
+    }
+    init();
+  </script>
+</body>
+</html>
